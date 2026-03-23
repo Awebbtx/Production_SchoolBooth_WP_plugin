@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: PTA Schoolbooth Photo Manager
+ * Plugin Name: Schoolbooth Photo Manager
  * Description: Secure photo downloads with access codes and portal interface
  * Version: 3.2.0
  * Author: IKAP Systems

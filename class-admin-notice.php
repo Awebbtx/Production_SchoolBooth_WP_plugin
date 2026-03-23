@@ -12,7 +12,7 @@ class PTASB_Admin_Notice {
             $partial_secret = substr($secret, 0, 4) . str_repeat('*', strlen($secret) - 4);
             
             echo '<div class="notice notice-info">';
-            echo '<p><strong>PTA Schoolbooth Photo Manager</strong></p>';
+            echo '<p><strong>Schoolbooth Photo Manager</strong></p>';
             echo '<p>Current Secret: <code>' . esc_html($partial_secret) . '</code></p>';
             echo '<p>Ensure this matches the secret in your schoolbooth application.</p>';
             echo '</div>';

@@ -1,11 +1,10 @@
 ﻿/**
- * PTA Schoolbooth Permissions Form Handler
+ * Schoolbooth Permissions Form Handler
  * Handles form submission via AJAX with proper validation and feedback.
  */
 
 (function($) {
     'use strict';
-
     $(document).ready(function() {
         const cfg = window.ptasb_form_vars || {};
         const $form = $('#pta-schoolbooth-permissions-form');

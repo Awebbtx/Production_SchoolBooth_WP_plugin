@@ -122,9 +122,9 @@ class PTASB_Upload_API {
         }
 
         $settings = get_option('pta_schoolbooth_settings', []);
-        return rest_ensure_response([
-            'success' => true,
-            'message' => 'PTA Schoolbooth upload API reachable',
+            return rest_ensure_response([
+                'success' => true,
+                'message' => 'Schoolbooth upload API reachable',
             'upload_path' => isset($settings['upload_path']) ? $settings['upload_path'] : 'pta-schoolbooth',
         ]);
     }

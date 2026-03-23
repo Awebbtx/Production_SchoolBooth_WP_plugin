@@ -1,6 +1,6 @@
 ﻿msgid ""
 msgstr ""
-"Project-Id-Version: PTA Schoolbooth Photo Manager 3.2.0\n"
+"Project-Id-Version: Schoolbooth Photo Manager 3.2.0\n"
 "POT-Creation-Date: 2026-03-23 00:00+0000\n"
 "PO-Revision-Date: \n"
 "Language-Team: \n"
@@ -62,7 +62,7 @@ msgstr ""
 msgid "Failed to delete photo"
 msgstr ""
 
-msgid "PTA Schoolbooth Photo Manager Settings"
+msgid "Schoolbooth Photo Manager Settings"
 msgstr ""
 
 msgid "Photo Portal Settings"
@@ -89,7 +89,7 @@ msgstr ""
 msgid "Must match the secret in your schoolbooth application"
 msgstr ""
 
-msgid "Configure your PTA Schoolbooth Photo Manager settings"
+msgid "Configure your Schoolbooth Photo Manager settings"
 msgstr ""
 
 msgid "Max Downloads"
@@ -143,7 +143,7 @@ msgstr ""
 msgid "View"
 msgstr ""
 
-msgid "PTA Schoolbooth Photo Manager"
+msgid "Schoolbooth Photo Manager"
 msgstr ""
 
 msgid "Current Secret: %s"

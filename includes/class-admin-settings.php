@@ -28,8 +28,8 @@ class PTASB_Download_Admin_Settings {
 
     public function add_admin_menu() {
         add_menu_page(
-            __('PTA Schoolbooth', 'pta-schoolbooth'),
-            __('PTA Schoolbooth', 'pta-schoolbooth'),
+            __('Schoolbooth', 'pta-schoolbooth'),
+            __('Schoolbooth', 'pta-schoolbooth'),
             'manage_options',
             'pta-schoolbooth',
             [$this, 'general_page'],
@@ -219,7 +219,7 @@ class PTASB_Download_Admin_Settings {
         $options = get_option('pta_schoolbooth_settings', []);
         ?>
         <div class="wrap">
-            <h1><?php _e('PTA Schoolbooth: General', 'pta-schoolbooth'); ?></h1>
+            <h1><?php _e('Schoolbooth: General', 'pta-schoolbooth'); ?></h1>
             <?php settings_errors('pta_schoolbooth_settings'); ?>
 
             <form action="options.php" method="post">
@@ -270,7 +270,7 @@ class PTASB_Download_Admin_Settings {
             : [];
         ?>
         <div class="wrap">
-            <h1><?php _e('PTA Schoolbooth: Access & Security', 'pta-schoolbooth'); ?></h1>
+            <h1><?php _e('Schoolbooth: Access & Security', 'pta-schoolbooth'); ?></h1>
             <?php settings_errors('pta_schoolbooth_settings'); ?>
 
             <form action="options.php" method="post">
@@ -355,7 +355,7 @@ class PTASB_Download_Admin_Settings {
         $arbitration_county = isset($options['entity_arbitration_county']) ? $options['entity_arbitration_county'] : 'Comal County';
         ?>
         <div class="wrap">
-            <h1><?php _e('PTA Schoolbooth: Consent Policy', 'pta-schoolbooth'); ?></h1>
+            <h1><?php _e('Schoolbooth: Consent Policy', 'pta-schoolbooth'); ?></h1>
             <?php settings_errors('pta_schoolbooth_settings'); ?>
 
             <form action="options.php" method="post">
@@ -620,7 +620,7 @@ class PTASB_Download_Admin_Settings {
         $this->maybe_create_page();
         ?>
         <div class="wrap">
-            <h1><?php _e('PTA Schoolbooth: Portal Setup', 'pta-schoolbooth'); ?></h1>
+            <h1><?php _e('Schoolbooth: Portal Setup', 'pta-schoolbooth'); ?></h1>
             <?php settings_errors('ptasb_messages'); ?>
 
             <div class="pta-schoolbooth-quick-setup">

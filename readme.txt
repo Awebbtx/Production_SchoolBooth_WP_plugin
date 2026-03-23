@@ -1,4 +1,4 @@
-﻿=== PTA Schoolbooth Photo Manager ===
+﻿=== Schoolbooth Photo Manager ===
 Contributors: ikapsystems
 Tags: photo download, secure downloads, access codes
 Requires at least: 5.6
@@ -31,7 +31,7 @@ This plugin provides:
 == Changelog ==
 
 = 3.0.2 =
-* Rebranding cleanup for PTA Schoolbooth naming
+* Rebranding cleanup for Schoolbooth naming
 * API namespace and settings naming alignment
 * Production-focused packaging updates
 
