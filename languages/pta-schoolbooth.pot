@@ -1,4 +1,4 @@
-msgid ""
+﻿msgid ""
 msgstr ""
 "Project-Id-Version: PTA Schoolbooth Photo Manager 3.2.0\n"
 "POT-Creation-Date: 2026-03-23 00:00+0000\n"
@@ -33,9 +33,6 @@ msgid "No photos found for this access code"
 msgstr ""
 
 msgid "Photo %s"
-msgstr ""
-
-msgid "Capture Label:"
 msgstr ""
 
 msgid "Downloads remaining:"
@@ -208,44 +205,9 @@ msgstr ""
 msgid "Unauthorized"
 msgstr ""
 
-msgid "Failed to restore photo"
-msgstr ""
-
-msgid "Restore this photo from trash?"
-msgstr ""
-
-msgid "Restore"
-msgstr ""
-
 msgid "Powered by"
 msgstr ""
 
 msgid "Schoolbooth"
 msgstr ""
 
-msgid "Failed to restore photo"
-msgstr ""
-
-msgid "Restore this photo from trash?"
-msgstr ""
-
-msgid "Restore"
-msgstr ""
-
-msgid "Failed to restore photo"
-msgstr ""
-
-msgid "Restore this photo from trash?"
-msgstr ""
-
-msgid "Restore"
-msgstr ""
-
-msgid "Failed to restore photo"
-msgstr ""
-
-msgid "Restore this photo from trash?"
-msgstr ""
-
-msgid "Restore"
-msgstr ""
