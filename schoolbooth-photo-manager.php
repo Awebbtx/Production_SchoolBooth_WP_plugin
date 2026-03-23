@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Schoolbooth Photo Manager
  * Description: Secure photo downloads with access codes and portal interface
- * Version: 3.2.0
+ * Version: 3.2.1
  * Author: IKAP Systems
  * Text Domain: schoolbooth
  */
@@ -31,19 +31,23 @@ if (!function_exists('schoolbooth_normalize_access_code')) {
 // Production safety: rely on WordPress defaults for application password availability.
 
 // Plugin Setup
-define('SCHOOLBOOTH_DOWNLOAD_VERSION', '3.2.0');
+define('SCHOOLBOOTH_DOWNLOAD_VERSION', '3.2.1');
 define('SCHOOLBOOTH_DOWNLOAD_PATH', plugin_dir_path(__FILE__));
 define('SCHOOLBOOTH_DOWNLOAD_URL', plugin_dir_url(__FILE__));
 
 register_activation_hook(__FILE__, function() {
-    $settings = get_option('schoolbooth_settings');
-    $secret = isset($settings['shared_secret']) ? $settings['shared_secret'] : SCHOOLBOOTH_SHARED_SECRET;
-    
+    $settings = get_option('schoolbooth_settings', []);
+    if (!is_array($settings)) {
+        $settings = [];
+    }
+
+    $activation_issues = [];
+    $secret = isset($settings['shared_secret']) ? (string) $settings['shared_secret'] : (string) SCHOOLBOOTH_SHARED_SECRET;
+
     if (strlen($secret) < 32) {
-        wp_die(
-            '<strong>Security Error:</strong> Shared Secret must be at least 32 characters.<br>'
-            . 'Please set a strong secret in the plugin settings before activation.'
-        );
+        $settings['shared_secret'] = wp_generate_password(64, true, true);
+        update_option('schoolbooth_settings', $settings, false);
+        $activation_issues[] = __('Shared secret was too short and has been regenerated automatically. Re-enroll client devices after activation.', 'schoolbooth');
     }
     
     $upload_dir = wp_upload_dir();
@@ -55,17 +59,11 @@ register_activation_hook(__FILE__, function() {
     wp_mkdir_p($data_dir);
 
     if (!is_dir($photos_dir) || !is_dir($data_dir)) {
-        wp_die(
-            '<strong>Activation Error:</strong> Unable to create required upload directories.<br>'
-            . 'Please verify WordPress upload permissions and try again.'
-        );
+        $activation_issues[] = __('Could not create one or more upload directories. Check WordPress upload permissions.', 'schoolbooth');
     }
 
     if (@file_put_contents($data_dir . '/.htaccess', 'Deny from all', LOCK_EX) === false) {
-        wp_die(
-            '<strong>Activation Error:</strong> Unable to write security file for access code storage.<br>'
-            . 'Please verify WordPress upload permissions and try again.'
-        );
+        $activation_issues[] = __('Could not write data directory protection file. This can happen on non-Apache hosts.', 'schoolbooth');
     }
     
     if (@file_put_contents($schoolbooth_dir . '/.htaccess', 
@@ -76,11 +74,31 @@ register_activation_hook(__FILE__, function() {
         "Deny from all",
         LOCK_EX
     ) === false) {
-        wp_die(
-            '<strong>Activation Error:</strong> Unable to write upload directory access rules.<br>'
-            . 'Please verify WordPress upload permissions and try again.'
-        );
+        $activation_issues[] = __('Could not write upload directory access rules file. This can happen on non-Apache hosts.', 'schoolbooth');
     }
+
+    if (!empty($activation_issues)) {
+        set_transient('schoolbooth_activation_issues', $activation_issues, 5 * MINUTE_IN_SECONDS);
+    }
+});
+
+add_action('admin_notices', function() {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $activation_issues = get_transient('schoolbooth_activation_issues');
+    if (!is_array($activation_issues) || empty($activation_issues)) {
+        return;
+    }
+
+    delete_transient('schoolbooth_activation_issues');
+
+    echo '<div class="notice notice-warning"><p><strong>' . esc_html__('Schoolbooth activation completed with warnings:', 'schoolbooth') . '</strong></p><ul style="margin-left:20px;list-style:disc;">';
+    foreach ($activation_issues as $issue) {
+        echo '<li>' . esc_html($issue) . '</li>';
+    }
+    echo '</ul></div>';
 });
 
 // Include all plugin classes
