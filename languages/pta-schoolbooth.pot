@@ -1,0 +1,251 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: IKAP CAM Photo Portal 1.0\n"
+"POT-Creation-Date: 2023-07-20 12:00+0000\n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0.1\n"
+"X-Poedit-Basepath: ..\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Access Your Photos"
+msgstr ""
+
+msgid "Capture Label:"
+msgstr ""
+
+msgid "Access Code:"
+msgstr ""
+
+msgid "View Photos"
+msgstr ""
+
+msgid "Download All"
+msgstr ""
+
+msgid "Delete All"
+msgstr ""
+
+msgid "No photos found for this access code"
+msgstr ""
+
+msgid "Photo %s"
+msgstr ""
+
+msgid "Capture Label:"
+msgstr ""
+
+msgid "Downloads remaining:"
+msgstr ""
+
+msgid "Expires in:"
+msgstr ""
+
+msgid "days"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Are you sure you want to delete this photo?"
+msgstr ""
+
+msgid "Are you sure you want to delete ALL photos for this access code?"
+msgstr ""
+
+msgid "No photos available"
+msgstr ""
+
+msgid "Failed to delete photo"
+msgstr ""
+
+msgid "IKAP CAM Photo Portal Settings"
+msgstr ""
+
+msgid "Photo Portal Settings"
+msgstr ""
+
+msgid "School Name"
+msgstr ""
+
+msgid "Contact Email"
+msgstr ""
+
+msgid "Privacy Policy URL"
+msgstr ""
+
+msgid "Consent Template"
+msgstr ""
+
+msgid "Available placeholders: {school_name}, {contact_email}, {privacy_policy_url}"
+msgstr ""
+
+msgid "Shared Secret"
+msgstr ""
+
+msgid "Must match the secret in your schoolbooth application"
+msgstr ""
+
+msgid "Configure your IKAP CAM Photo Portal settings"
+msgstr ""
+
+msgid "Max Downloads"
+msgstr ""
+
+msgid "Days Until Auto-Delete"
+msgstr ""
+
+msgid "Storage Path"
+msgstr ""
+
+msgid "Relative to wp-content/uploads/ (e.g. \"ikap\" or \"photos/2024\")"
+msgstr ""
+
+msgid "Quick Setup"
+msgstr ""
+
+msgid "Shortcode"
+msgstr ""
+
+msgid "Add this to any page to display the photo portal"
+msgstr ""
+
+msgid "Create Portal Page"
+msgstr ""
+
+msgid "Page Title"
+msgstr ""
+
+msgid "Template"
+msgstr ""
+
+msgid "Default Template"
+msgstr ""
+
+msgid "Create Page"
+msgstr ""
+
+msgid "You do not have sufficient permissions"
+msgstr ""
+
+msgid "Page \"%s\" already exists"
+msgstr ""
+
+msgid "Failed to create page: %s"
+msgstr ""
+
+msgid "Page created: %s"
+msgstr ""
+
+msgid "View"
+msgstr ""
+
+msgid "IKAP CAM Photo Portal"
+msgstr ""
+
+msgid "Current Secret: %s"
+msgstr ""
+
+msgid "Ensure this matches the secret in your schoolbooth application."
+msgstr ""
+
+msgid "There is %d photo in the trash that will be permanently deleted in 7 days."
+msgid_plural "There are %d photos in the trash that will be permanently deleted in 7 days."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Manage Trash"
+msgstr ""
+
+msgid "I Agree"
+msgstr ""
+
+msgid "Invalid nonce"
+msgstr ""
+
+msgid "Failed to restore photo"
+msgstr ""
+
+msgid "Restore this photo from trash?"
+msgstr ""
+
+msgid "Restore"
+msgstr ""
+
+msgid "Photo Usage Consent"
+msgstr ""
+
+msgid "By accessing these photos, you agree that {school_name} may use these images for:"
+msgstr ""
+
+msgid "School publications"
+msgstr ""
+
+msgid "Website and social media"
+msgstr ""
+
+msgid "Marketing materials"
+msgstr ""
+
+msgid "If you wish to revoke this consent, please contact us at {contact_email}."
+msgstr ""
+
+msgid "View our full <a href=\"{privacy_policy_url}\">Privacy Policy</a>."
+msgstr ""
+
+msgid "Invalid security token"
+msgstr ""
+
+msgid "File not found"
+msgstr ""
+
+msgid "Unauthorized"
+msgstr ""
+
+msgid "Failed to restore photo"
+msgstr ""
+
+msgid "Restore this photo from trash?"
+msgstr ""
+
+msgid "Restore"
+msgstr ""
+
+msgid "Powered by"
+msgstr ""
+
+msgid "IKAP CAM"
+msgstr ""
+
+msgid "Failed to restore photo"
+msgstr ""
+
+msgid "Restore this photo from trash?"
+msgstr ""
+
+msgid "Restore"
+msgstr ""
+
+msgid "Failed to restore photo"
+msgstr ""
+
+msgid "Restore this photo from trash?"
+msgstr ""
+
+msgid "Restore"
+msgstr ""
+
+msgid "Failed to restore photo"
+msgstr ""
+
+msgid "Restore this photo from trash?"
+msgstr ""
+
+msgid "Restore"
+msgstr ""
