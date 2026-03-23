@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 class SCHOOLBOOTH_Download_Shortcode_Handler {
     public static function init() {
         add_shortcode('schoolbooth_download_portal', [self::class, 'download_portal_shortcode']);

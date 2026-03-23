@@ -1,4 +1,4 @@
-﻿<div class="photo-card">
+<div class="photo-card">
     <img src="<?php echo esc_url($photo['thumbnail_url']); ?>" 
          alt="<?php echo esc_attr(sprintf(__('Photo %s', 'schoolbooth'), $photo['label'])); ?>">
     

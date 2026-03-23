@@ -3,7 +3,7 @@ Contributors: ikapsystems
 Tags: photo download, secure downloads, access codes
 Requires at least: 5.6
 Tested up to: 6.0
-Stable tag: 3.2.1
+Stable tag: 3.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -29,6 +29,10 @@ This plugin provides:
 4. Use the [schoolbooth_download_portal] shortcode or create a page automatically
 
 == Changelog ==
+
+= 3.2.2 =
+* Fixed activation warning "generated unexpected output" by removing UTF-8 BOM bytes from all PHP files.
+* Packaging hardening to ensure clean WordPress extraction and activation.
 
 = 3.2.1 =
 * Fixed activation failures by making setup checks non-fatal and surfacing warnings in wp-admin.

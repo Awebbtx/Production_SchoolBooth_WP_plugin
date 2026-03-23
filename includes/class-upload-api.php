@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 class SCHOOLBOOTH_Upload_API {
     private static $instance;

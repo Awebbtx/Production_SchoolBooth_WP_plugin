@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 class SCHOOLBOOTH_Admin_Notice {
     public static function init() {
         add_action('admin_notices', [self::class, 'show_secret_notice']);

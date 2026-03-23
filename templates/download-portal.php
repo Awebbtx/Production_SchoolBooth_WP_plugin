@@ -1,4 +1,4 @@
-﻿<div class="schoolbooth-portal">
+<div class="schoolbooth-portal">
     <?php 
     $highlight_file = isset($_GET['file']) ? sanitize_text_field($_GET['file']) : '';
     $can_delete = is_user_logged_in() && current_user_can('manage_options');

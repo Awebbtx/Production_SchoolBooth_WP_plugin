@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 class SCHOOLBOOTH_Download_Handler {
     private static $instance;
     protected $options;
