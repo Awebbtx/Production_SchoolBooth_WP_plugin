@@ -3,7 +3,7 @@
  * Plugin Name: PTA Schoolbooth Photo Manager
  * Description: Secure photo downloads with access codes and portal interface
  * Version: 3.2.0
- * Author: Anthony Webb
+ * Author: IKAP Systems
  * Text Domain: pta-schoolbooth
  */
 
@@ -17,7 +17,7 @@ if (!defined('PTASB_SHARED_SECRET')) {
         : bin2hex(random_bytes(24));
     $secret = isset($settings['shared_secret'])
         ? $settings['shared_secret']
-        : 'REPLACE-THIS-WITH-A-STRONG-SECRET-' . $generated_secret;
+        : $generated_secret;
     define('PTASB_SHARED_SECRET', $secret);
 }
 
@@ -28,9 +28,7 @@ if (!function_exists('ptasb_normalize_access_code')) {
     }
 }
 
-// Allow Application Passwords on non-HTTPS environments (e.g. test stands).
-// On HTTPS production sites this filter is a no-op since WP already returns true.
-add_filter('wp_is_application_passwords_available', '__return_true');
+// Production safety: rely on WordPress defaults for application password availability.
 
 // Plugin Setup
 define('PTASB_DOWNLOAD_VERSION', '3.2.0');

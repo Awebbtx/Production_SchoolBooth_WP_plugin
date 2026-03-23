@@ -208,10 +208,6 @@ class PTASB_Download_Admin_Settings {
             return '/wp-json/pta-schoolbooth/v1/ingest';
         }
 
-        if (isset($routes['/nbpta/v1/ingest'])) {
-            return '/wp-json/nbpta/v1/ingest';
-        }
-
         return '/wp-json/pta-schoolbooth/v1/ingest';
     }
 
