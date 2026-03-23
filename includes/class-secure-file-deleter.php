@@ -1,11 +1,11 @@
-<?php
+﻿<?php
 /**
  * Secure File Deleter
  * 
  * Securely delete files by overwriting with random data before unlinking.
  * Prevents deleted file recovery via forensic tools.
  */
-class PTASB_Secure_File_Deleter {
+class SCHOOLBOOTH_Secure_File_Deleter {
     
     private static $instance;
     
@@ -27,7 +27,7 @@ class PTASB_Secure_File_Deleter {
      */
     public static function secure_delete($filepath, $audit_log = true) {
         // Deny requests from web
-        if (!defined('PTASB_SHARED_SECRET')) {
+        if (!defined('SCHOOLBOOTH_SHARED_SECRET')) {
             return new WP_Error('not_initialized', 'Plugin not properly initialized');
         }
         
@@ -65,7 +65,7 @@ class PTASB_Secure_File_Deleter {
         
         // Log deletion in audit trail
         if ($audit_log) {
-            $audit = PTASB_Audit_Logger::init();
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('auto_delete', [
                 'filename'     => basename($filepath),
                 'filepath'     => $filepath,
@@ -156,4 +156,5 @@ class PTASB_Secure_File_Deleter {
         }
     }
 }
+
 

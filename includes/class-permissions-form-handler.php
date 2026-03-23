@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Permissions Form Handler
  * 
@@ -8,7 +8,7 @@
  * - CSRF protection (nonce)
  * - Audit logging
  */
-class PTASB_Permissions_Form_Handler {
+class SCHOOLBOOTH_Permissions_Form_Handler {
     
     private static $instance;
     
@@ -20,16 +20,16 @@ class PTASB_Permissions_Form_Handler {
     }
     
     private function __construct() {
-        add_action('wp_ajax_nopriv_ptasb_submit_permissions_form', [$this, 'handle_form_submission']);
-        add_action('wp_ajax_ptasb_submit_permissions_form', [$this, 'handle_form_submission']);
+        add_action('wp_ajax_nopriv_schoolbooth_submit_permissions_form', [$this, 'handle_form_submission']);
+        add_action('wp_ajax_schoolbooth_submit_permissions_form', [$this, 'handle_form_submission']);
     }
     
     /**
      * Render the permissions form
      */
     public static function render_form($access_code) {
-        $access_code = ptasb_normalize_access_code($access_code);
-        $options = get_option('pta_schoolbooth_settings', []);
+        $access_code = schoolbooth_normalize_access_code($access_code);
+        $options = get_option('schoolbooth_settings', []);
         $replacements = [
             '{{school_name}}' => isset($options['entity_school_name']) ? $options['entity_school_name'] : '',
             '{{district_name}}' => isset($options['entity_district_name']) ? $options['entity_district_name'] : '',
@@ -42,36 +42,36 @@ class PTASB_Permissions_Form_Handler {
         ];
         $policy_html = isset($options['consent_policy_html']) && $options['consent_policy_html'] !== ''
             ? wp_kses_post($options['consent_policy_html'])
-            : '<p>' . esc_html__('By checking this box and submitting this form, I consent to the photo release policy for this event.', 'pta-schoolbooth') . '</p>';
+            : '<p>' . esc_html__('By checking this box and submitting this form, I consent to the photo release policy for this event.', 'schoolbooth') . '</p>';
         $policy_html = strtr($policy_html, array_map('esc_html', $replacements));
         if (!empty($replacements['{{privacy_policy_url}}'])) {
             $policy_html = str_replace(esc_html('{{privacy_policy_url}}'), esc_url($replacements['{{privacy_policy_url}}']), $policy_html);
         }
         $consent_checkbox_label = isset($options['consent_checkbox_label']) && $options['consent_checkbox_label'] !== ''
             ? sanitize_text_field($options['consent_checkbox_label'])
-            : __('I certify that I have read and agree to the photo release terms.', 'pta-schoolbooth');
+            : __('I certify that I have read and agree to the photo release terms.', 'schoolbooth');
         // Verify nonce
-        $nonce = wp_create_nonce('ptasb_permissions_form_' . sanitize_key($access_code));
+        $nonce = wp_create_nonce('schoolbooth_permissions_form_' . sanitize_key($access_code));
         
         ob_start();
         ?>
-        <div class="pta-schoolbooth-permissions-form-wrapper">
+        <div class="schoolbooth-permissions-form-wrapper">
             <div class="permissions-form-container">
-                <h2><?php _e('Release Form', 'pta-schoolbooth'); ?></h2>
-                <p><?php _e('Please complete this form before accessing your photos.', 'pta-schoolbooth'); ?></p>
+                <h2><?php _e('Release Form', 'schoolbooth'); ?></h2>
+                <p><?php _e('Please complete this form before accessing your photos.', 'schoolbooth'); ?></p>
 
                 <div class="consent-policy-text">
                     <?php echo $policy_html; ?>
                 </div>
                 
-                <form id="pta-schoolbooth-permissions-form" class="pta-schoolbooth-permissions-form">
-                    <input type="hidden" name="action" value="ptasb_submit_permissions_form">
+                <form id="schoolbooth-permissions-form" class="schoolbooth-permissions-form">
+                    <input type="hidden" name="action" value="schoolbooth_submit_permissions_form">
                     <input type="hidden" name="nonce" value="<?php echo esc_attr($nonce); ?>">
                     <input type="hidden" name="access_code" value="<?php echo esc_attr($access_code); ?>">
                     
                     <div class="form-group">
                         <label for="first_name">
-                            <?php _e('First Name', 'pta-schoolbooth'); ?> <span class="required">*</span>
+                            <?php _e('First Name', 'schoolbooth'); ?> <span class="required">*</span>
                         </label>
                         <input 
                             type="text" 
@@ -79,7 +79,7 @@ class PTASB_Permissions_Form_Handler {
                             name="first_name" 
                             required 
                             pattern="[a-zA-Z\s'-]{2,50}"
-                            placeholder="<?php esc_attr_e('Enter your first name', 'pta-schoolbooth'); ?>"
+                            placeholder="<?php esc_attr_e('Enter your first name', 'schoolbooth'); ?>"
                             autocomplete="given-name"
                         >
                         <small class="form-error" style="display:none;"></small>
@@ -87,7 +87,7 @@ class PTASB_Permissions_Form_Handler {
                     
                     <div class="form-group">
                         <label for="last_name">
-                            <?php _e('Last Name', 'pta-schoolbooth'); ?> <span class="required">*</span>
+                            <?php _e('Last Name', 'schoolbooth'); ?> <span class="required">*</span>
                         </label>
                         <input 
                             type="text" 
@@ -95,7 +95,7 @@ class PTASB_Permissions_Form_Handler {
                             name="last_name" 
                             required 
                             pattern="[a-zA-Z\s'-]{2,50}"
-                            placeholder="<?php esc_attr_e('Enter your last name', 'pta-schoolbooth'); ?>"
+                            placeholder="<?php esc_attr_e('Enter your last name', 'schoolbooth'); ?>"
                             autocomplete="family-name"
                         >
                         <small class="form-error" style="display:none;"></small>
@@ -103,14 +103,14 @@ class PTASB_Permissions_Form_Handler {
                     
                     <div class="form-group">
                         <label for="email">
-                            <?php _e('Email Address', 'pta-schoolbooth'); ?> <span class="required">*</span>
+                            <?php _e('Email Address', 'schoolbooth'); ?> <span class="required">*</span>
                         </label>
                         <input 
                             type="email" 
                             id="email" 
                             name="email" 
                             required 
-                            placeholder="<?php esc_attr_e('you@example.com', 'pta-schoolbooth'); ?>"
+                            placeholder="<?php esc_attr_e('you@example.com', 'schoolbooth'); ?>"
                             autocomplete="email"
                         >
                         <small class="form-error" style="display:none;"></small>
@@ -135,10 +135,10 @@ class PTASB_Permissions_Form_Handler {
                     <div class="form-actions">
                         <button 
                             type="submit" 
-                            class="pta-schoolbooth-btn pta-schoolbooth-btn-primary"
+                            class="schoolbooth-btn schoolbooth-btn-primary"
                             id="submit-consent"
                         >
-                            <?php _e('I Consent to Release', 'pta-schoolbooth'); ?>
+                            <?php _e('I Consent to Release', 'schoolbooth'); ?>
                         </button>
                     </div>
                     
@@ -148,7 +148,7 @@ class PTASB_Permissions_Form_Handler {
         </div>
         
         <style>
-            .pta-schoolbooth-permissions-form-wrapper {
+            .schoolbooth-permissions-form-wrapper {
                 padding: 20px;
                 background: #f9f9f9;
                 border-radius: 5px;
@@ -257,7 +257,7 @@ class PTASB_Permissions_Form_Handler {
                 text-align: center;
             }
             
-            .pta-schoolbooth-btn {
+            .schoolbooth-btn {
                 padding: 12px 30px;
                 font-size: 16px;
                 border: none;
@@ -267,16 +267,16 @@ class PTASB_Permissions_Form_Handler {
                 transition: all 0.3s ease;
             }
             
-            .pta-schoolbooth-btn-primary {
+            .schoolbooth-btn-primary {
                 background-color: #2271b1;
                 color: white;
             }
             
-            .pta-schoolbooth-btn-primary:hover {
+            .schoolbooth-btn-primary:hover {
                 background-color: #1d5fa0;
             }
             
-            .pta-schoolbooth-btn-primary:disabled {
+            .schoolbooth-btn-primary:disabled {
                 background-color: #ccc;
                 cursor: not-allowed;
             }
@@ -319,22 +319,22 @@ class PTASB_Permissions_Form_Handler {
         // Verify nonce
         if (!isset($_POST['nonce']) || !isset($_POST['access_code'])) {
             wp_send_json_error([
-                'message' => __('Invalid request', 'pta-schoolbooth'),
+                'message' => __('Invalid request', 'schoolbooth'),
             ], 400);
         }
         
-        $access_code = ptasb_normalize_access_code(sanitize_text_field($_POST['access_code']));
+        $access_code = schoolbooth_normalize_access_code(sanitize_text_field($_POST['access_code']));
         $nonce = sanitize_text_field($_POST['nonce']);
         
         // Verify nonce
-        if (!wp_verify_nonce($nonce, 'ptasb_permissions_form_' . sanitize_key($access_code))) {
+        if (!wp_verify_nonce($nonce, 'schoolbooth_permissions_form_' . sanitize_key($access_code))) {
             wp_send_json_error([
-                'message' => __('Security verification failed. Please refresh the page.', 'pta-schoolbooth'),
+                'message' => __('Security verification failed. Please refresh the page.', 'schoolbooth'),
             ], 403);
         }
         
         // Check rate limit
-        $rate_limiter = PTASB_Rate_Limiter::init();
+        $rate_limiter = SCHOOLBOOTH_Rate_Limiter::init();
         $rate_check = $rate_limiter->check_form_submission($access_code);
         if (is_wp_error($rate_check)) {
             wp_send_json_error([
@@ -353,23 +353,23 @@ class PTASB_Permissions_Form_Handler {
         $errors = [];
         
         if (empty($first_name) || strlen($first_name) < 2) {
-            $errors['first_name'] = __('First name is required and must be at least 2 characters', 'pta-schoolbooth');
+            $errors['first_name'] = __('First name is required and must be at least 2 characters', 'schoolbooth');
         }
         
         if (empty($last_name) || strlen($last_name) < 2) {
-            $errors['last_name'] = __('Last name is required and must be at least 2 characters', 'pta-schoolbooth');
+            $errors['last_name'] = __('Last name is required and must be at least 2 characters', 'schoolbooth');
         }
         
         if (empty($email) || !is_email($email)) {
-            $errors['email'] = __('Valid email address is required', 'pta-schoolbooth');
+            $errors['email'] = __('Valid email address is required', 'schoolbooth');
         }
         
         if (!$consent) {
-            $errors['consent'] = __('You must agree to the release form', 'pta-schoolbooth');
+            $errors['consent'] = __('You must agree to the release form', 'schoolbooth');
         }
         
         if (!empty($errors)) {
-            $audit = PTASB_Audit_Logger::init();
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('form_submission', [
                 'access_code'   => $access_code,
                 'success'       => false,
@@ -382,7 +382,7 @@ class PTASB_Permissions_Form_Handler {
             ]);
 
             wp_send_json_error([
-                'message' => __('Please correct the errors below', 'pta-schoolbooth'),
+                'message' => __('Please correct the errors below', 'schoolbooth'),
                 'errors' => $errors,
             ], 400);
         }
@@ -391,7 +391,7 @@ class PTASB_Permissions_Form_Handler {
         $pii_hash = $this->hash_pii($first_name, $last_name, $email);
         
         // Log form submission in audit trail
-        $audit = PTASB_Audit_Logger::init();
+        $audit = SCHOOLBOOTH_Audit_Logger::init();
         $audit_result = $audit->log_event('form_submission', [
             'access_code'    => $access_code,
             'success'        => true,
@@ -405,7 +405,7 @@ class PTASB_Permissions_Form_Handler {
         
         if (is_wp_error($audit_result)) {
             wp_send_json_error([
-                'message' => __('Failed to process consent form. Please try again.', 'pta-schoolbooth'),
+                'message' => __('Failed to process consent form. Please try again.', 'schoolbooth'),
             ], 500);
         }
         
@@ -415,7 +415,7 @@ class PTASB_Permissions_Form_Handler {
         // Set cookie/session flag indicating form was completed
         $form_token = wp_hash($pii_hash . $access_code);
         setcookie(
-            'ptasb_form_' . sanitize_key($access_code),
+            'schoolbooth_form_' . sanitize_key($access_code),
             $form_token,
             time() + HOUR_IN_SECONDS,
             COOKIEPATH,
@@ -425,7 +425,7 @@ class PTASB_Permissions_Form_Handler {
         );
         
         wp_send_json_success([
-            'message' => __('Thank you! Your consent has been recorded. You can now access your photos.', 'pta-schoolbooth'),
+            'message' => __('Thank you! Your consent has been recorded. You can now access your photos.', 'schoolbooth'),
             'token' => $form_token,
         ]);
     }
@@ -434,7 +434,7 @@ class PTASB_Permissions_Form_Handler {
      * Check if user has completed permissions form for this access code
      */
     public static function has_completed_form($access_code) {
-        $cookie_name = 'ptasb_form_' . sanitize_key(ptasb_normalize_access_code($access_code));
+        $cookie_name = 'schoolbooth_form_' . sanitize_key(schoolbooth_normalize_access_code($access_code));
         return isset($_COOKIE[$cookie_name]);
     }
     
@@ -446,7 +446,7 @@ class PTASB_Permissions_Form_Handler {
         $to_hash = strtolower(trim($first_name)) . 
                    '|' . strtolower(trim($last_name)) . 
                    '|' . strtolower(trim($email)) . 
-                   '|' . PTASB_SHARED_SECRET;
+                   '|' . SCHOOLBOOTH_SHARED_SECRET;
         
         return hash('sha256', $to_hash);
     }
@@ -483,4 +483,6 @@ class PTASB_Permissions_Form_Handler {
         return 'unknown';
     }
 }
+
+
 

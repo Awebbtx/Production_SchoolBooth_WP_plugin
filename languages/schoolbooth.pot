@@ -101,7 +101,7 @@ msgstr ""
 msgid "Storage Path"
 msgstr ""
 
-msgid "Relative to wp-content/uploads/ (e.g. \"pta-schoolbooth\" or \"photos/2024\")"
+msgid "Relative to wp-content/uploads/ (e.g. \"schoolbooth\" or \"photos/2024\")"
 msgstr ""
 
 msgid "Quick Setup"
@@ -210,4 +210,5 @@ msgstr ""
 
 msgid "Schoolbooth"
 msgstr ""
+
 

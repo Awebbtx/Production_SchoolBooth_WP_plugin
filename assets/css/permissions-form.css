@@ -1,6 +1,6 @@
-/* Permissions form styles for Schoolbooth portal */
+﻿/* Permissions form styles for Schoolbooth portal */
 
-.pta-schoolbooth-permissions-form-wrapper {
+.schoolbooth-permissions-form-wrapper {
     padding: 20px;
     background: #f9f9f9;
     border-radius: 5px;
@@ -54,7 +54,7 @@
     text-align: center;
 }
 
-.pta-schoolbooth-btn {
+.schoolbooth-btn {
     display: inline-block;
     padding: 10px 18px;
     border-radius: 4px;
@@ -62,11 +62,12 @@
     cursor: pointer;
 }
 
-.pta-schoolbooth-btn-primary {
+.schoolbooth-btn-primary {
     background: #2271b1;
     color: #fff;
 }
 
-.pta-schoolbooth-btn-primary:hover {
+.schoolbooth-btn-primary:hover {
     background: #135e96;
 }
+

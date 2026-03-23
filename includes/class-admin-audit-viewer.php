@@ -1,10 +1,10 @@
-<?php
+﻿<?php
 /**
  * Admin Audit Log Viewer
  * 
  * Displays immutable audit trail for administrators and event organizers
  */
-class PTASB_Admin_Audit_Viewer {
+class SCHOOLBOOTH_Admin_Audit_Viewer {
     
     private static $instance;
     
@@ -24,14 +24,14 @@ class PTASB_Admin_Audit_Viewer {
      * Register admin menu
      */
     public function register_menu() {
-        $capability = current_user_can('manage_options') ? 'manage_options' : 'ptasb_audit_read';
+        $capability = current_user_can('manage_options') ? 'manage_options' : 'schoolbooth_audit_read';
         
         add_submenu_page(
-            'pta-schoolbooth',
-            __('Photo Audit Log', 'pta-schoolbooth'),
-            __('Photo Audit Log', 'pta-schoolbooth'),
+            'schoolbooth',
+            __('Photo Audit Log', 'schoolbooth'),
+            __('Photo Audit Log', 'schoolbooth'),
             $capability,
-            'pta-schoolbooth-audit-log',
+            'schoolbooth-audit-log',
             [$this, 'render_audit_page']
         );
     }
@@ -41,38 +41,38 @@ class PTASB_Admin_Audit_Viewer {
      */
     public function render_audit_page() {
         // Check capabilities
-        if (!current_user_can('manage_options') && !current_user_can('ptasb_audit_read')) {
-            wp_die(__('You do not have permission to view audit logs.', 'pta-schoolbooth'));
+        if (!current_user_can('manage_options') && !current_user_can('schoolbooth_audit_read')) {
+            wp_die(__('You do not have permission to view audit logs.', 'schoolbooth'));
         }
         
         ?>
         <div class="wrap">
-            <h1><?php _e('Photo System Audit Log', 'pta-schoolbooth'); ?></h1>
+            <h1><?php _e('Photo System Audit Log', 'schoolbooth'); ?></h1>
             
             <div class="nav-tab-wrapper">
                 <a href="#events" class="nav-tab nav-tab-active" data-tab="events">
-                    <?php _e('All Events', 'pta-schoolbooth'); ?>
+                    <?php _e('All Events', 'schoolbooth'); ?>
                 </a>
                 <a href="#timeline" class="nav-tab" data-tab="timeline">
-                    <?php _e('Timeline', 'pta-schoolbooth'); ?>
+                    <?php _e('Timeline', 'schoolbooth'); ?>
                 </a>
                 <a href="#integrity" class="nav-tab" data-tab="integrity">
-                    <?php _e('Chain Integrity', 'pta-schoolbooth'); ?>
+                    <?php _e('Chain Integrity', 'schoolbooth'); ?>
                 </a>
             </div>
             
             <div id="events" class="tab-content">
-                <h2><?php _e('Event Log', 'pta-schoolbooth'); ?></h2>
+                <h2><?php _e('Event Log', 'schoolbooth'); ?></h2>
                 <?php $this->render_events_table(); ?>
             </div>
             
             <div id="timeline" class="tab-content" style="display:none;">
-                <h2><?php _e('Activity Timeline', 'pta-schoolbooth'); ?></h2>
+                <h2><?php _e('Activity Timeline', 'schoolbooth'); ?></h2>
                 <?php $this->render_timeline(); ?>
             </div>
             
             <div id="integrity" class="tab-content" style="display:none;">
-                <h2><?php _e('Chain Integrity Verification', 'pta-schoolbooth'); ?></h2>
+                <h2><?php _e('Chain Integrity Verification', 'schoolbooth'); ?></h2>
                 <?php $this->render_integrity_check(); ?>
             </div>
         </div>
@@ -226,7 +226,7 @@ class PTASB_Admin_Audit_Viewer {
      * Render events table
      */
     private function render_events_table() {
-        $audit = PTASB_Audit_Logger::init();
+        $audit = SCHOOLBOOTH_Audit_Logger::init();
         $events = $audit->get_events();
         
         if (is_wp_error($events)) {
@@ -235,7 +235,7 @@ class PTASB_Admin_Audit_Viewer {
         }
         
         if (empty($events)) {
-            echo '<p>' . __('No audit events recorded yet.', 'pta-schoolbooth') . '</p>';
+            echo '<p>' . __('No audit events recorded yet.', 'schoolbooth') . '</p>';
             return;
         }
         
@@ -246,12 +246,12 @@ class PTASB_Admin_Audit_Viewer {
         <table class="audit-table">
             <thead>
                 <tr>
-                    <th><?php _e('Timestamp', 'pta-schoolbooth'); ?></th>
-                    <th><?php _e('Event Type', 'pta-schoolbooth'); ?></th>
-                    <th><?php _e('Photo', 'pta-schoolbooth'); ?></th>
-                    <th><?php _e('User/IP', 'pta-schoolbooth'); ?></th>
-                    <th><?php _e('Status', 'pta-schoolbooth'); ?></th>
-                    <th><?php _e('Details', 'pta-schoolbooth'); ?></th>
+                    <th><?php _e('Timestamp', 'schoolbooth'); ?></th>
+                    <th><?php _e('Event Type', 'schoolbooth'); ?></th>
+                    <th><?php _e('Photo', 'schoolbooth'); ?></th>
+                    <th><?php _e('User/IP', 'schoolbooth'); ?></th>
+                    <th><?php _e('Status', 'schoolbooth'); ?></th>
+                    <th><?php _e('Details', 'schoolbooth'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -288,7 +288,7 @@ class PTASB_Admin_Audit_Viewer {
                             <?php 
                             $success = $this->is_event_success($event);
                             $class = $success ? 'success' : 'failure';
-                            $text = $success ? __('Success', 'pta-schoolbooth') : __('Failed', 'pta-schoolbooth');
+                            $text = $success ? __('Success', 'schoolbooth') : __('Failed', 'schoolbooth');
                             ?>
                             <span class="<?php echo esc_attr($class); ?>">
                                 <?php echo esc_html($text); ?>
@@ -305,14 +305,14 @@ class PTASB_Admin_Audit_Viewer {
                                 if ($consent_name !== '' || $consent_email !== '') {
                                     $parts = [];
                                     if ($consent_name !== '') {
-                                        $parts[] = sprintf(__('Name: %s', 'pta-schoolbooth'), $consent_name);
+                                        $parts[] = sprintf(__('Name: %s', 'schoolbooth'), $consent_name);
                                     }
                                     if ($consent_email !== '') {
-                                        $parts[] = sprintf(__('Email: %s', 'pta-schoolbooth'), $consent_email);
+                                        $parts[] = sprintf(__('Email: %s', 'schoolbooth'), $consent_email);
                                     }
                                     echo esc_html(implode(' | ', $parts));
                                 } elseif ($email_domain !== '') {
-                                    echo esc_html(sprintf(__('Email domain: %s', 'pta-schoolbooth'), $email_domain));
+                                    echo esc_html(sprintf(__('Email domain: %s', 'schoolbooth'), $email_domain));
                                 } elseif ($reason) {
                                     echo esc_html($reason);
                                 } else {
@@ -322,7 +322,7 @@ class PTASB_Admin_Audit_Viewer {
                                 echo esc_html($reason);
                             } else if (!empty($event['data']['downloads_used'])) {
                                 echo sprintf(
-                                    __('Download %d of %d', 'pta-schoolbooth'),
+                                    __('Download %d of %d', 'schoolbooth'),
                                     (int)$event['data']['downloads_used'],
                                     (int)$event['data']['downloads_used']
                                 );
@@ -342,7 +342,7 @@ class PTASB_Admin_Audit_Viewer {
      * Render timeline view
      */
     private function render_timeline() {
-        $audit = PTASB_Audit_Logger::init();
+        $audit = SCHOOLBOOTH_Audit_Logger::init();
         $events = $audit->get_events();
         
         if (is_wp_error($events)) {
@@ -351,7 +351,7 @@ class PTASB_Admin_Audit_Viewer {
         }
         
         if (empty($events)) {
-            echo '<p>' . __('No audit events recorded yet.', 'pta-schoolbooth') . '</p>';
+            echo '<p>' . __('No audit events recorded yet.', 'schoolbooth') . '</p>';
             return;
         }
         
@@ -374,13 +374,13 @@ class PTASB_Admin_Audit_Viewer {
                     if ($success) {
                         $event_file = isset($event['data']['file']) ? $event['data']['file'] : '';
                         echo sprintf(
-                            __('Download of %s completed', 'pta-schoolbooth'),
+                            __('Download of %s completed', 'schoolbooth'),
                             esc_html(basename($event_file))
                         );
                     } else {
                         $event_reason = isset($event['data']['reason']) ? $event['data']['reason'] : 'unknown';
                         echo sprintf(
-                            __('Download attempt failed: %s', 'pta-schoolbooth'),
+                            __('Download attempt failed: %s', 'schoolbooth'),
                             esc_html($event_reason)
                         );
                     }
@@ -392,13 +392,13 @@ class PTASB_Admin_Audit_Viewer {
                     $email_domain = isset($event['data']['email_domain']) ? $event['data']['email_domain'] : 'unknown';
                     if ($consent_name !== '' || $consent_email !== '') {
                         echo sprintf(
-                            __('Release form submitted by %s (%s)', 'pta-schoolbooth'),
-                            esc_html($consent_name !== '' ? $consent_name : __('Unknown', 'pta-schoolbooth')),
+                            __('Release form submitted by %s (%s)', 'schoolbooth'),
+                            esc_html($consent_name !== '' ? $consent_name : __('Unknown', 'schoolbooth')),
                             esc_html($consent_email !== '' ? $consent_email : $email_domain)
                         );
                     } else {
                         echo sprintf(
-                            __('Release form submitted from %s', 'pta-schoolbooth'),
+                            __('Release form submitted from %s', 'schoolbooth'),
                             esc_html($email_domain)
                         );
                     }
@@ -407,7 +407,7 @@ class PTASB_Admin_Audit_Viewer {
                 case 'auto_delete':
                     $delete_reason = isset($event['data']['reason']) ? $event['data']['reason'] : 'unknown';
                     echo sprintf(
-                        __('File auto-deleted: %s', 'pta-schoolbooth'),
+                        __('File auto-deleted: %s', 'schoolbooth'),
                         esc_html($delete_reason)
                     );
                     break;
@@ -415,7 +415,7 @@ class PTASB_Admin_Audit_Viewer {
                 case 'manual_delete':
                     $manual_file = isset($event['data']['file']) ? $event['data']['file'] : '';
                     echo sprintf(
-                        __('File manually deleted: %s', 'pta-schoolbooth'),
+                        __('File manually deleted: %s', 'schoolbooth'),
                         esc_html(basename($manual_file))
                     );
                     break;
@@ -423,7 +423,7 @@ class PTASB_Admin_Audit_Viewer {
                 case 'upload':
                     $upload_filename = isset($event['data']['filename']) ? $event['data']['filename'] : '';
                     echo sprintf(
-                        __('Photo uploaded: %s', 'pta-schoolbooth'),
+                        __('Photo uploaded: %s', 'schoolbooth'),
                         esc_html(basename($upload_filename))
                     );
                     break;
@@ -463,11 +463,11 @@ class PTASB_Admin_Audit_Viewer {
      * Render chain integrity check
      */
     private function render_integrity_check() {
-        $audit = PTASB_Audit_Logger::init();
+        $audit = SCHOOLBOOTH_Audit_Logger::init();
         $results = $audit->verify_chain_integrity();
         
         if (empty($results)) {
-            echo '<p>' . __('No audit events to verify.', 'pta-schoolbooth') . '</p>';
+            echo '<p>' . __('No audit events to verify.', 'schoolbooth') . '</p>';
             return;
         }
         
@@ -481,13 +481,13 @@ class PTASB_Admin_Audit_Viewer {
         
         if ($all_valid) {
             echo '<div class="info-box">';
-            echo '<strong>' . __('Audit trail integrity verified', 'pta-schoolbooth') . '</strong>';
-            echo '<p>' . __('All events are signed correctly and chain is unbroken.', 'pta-schoolbooth') . '</p>';
+            echo '<strong>' . __('Audit trail integrity verified', 'schoolbooth') . '</strong>';
+            echo '<p>' . __('All events are signed correctly and chain is unbroken.', 'schoolbooth') . '</p>';
             echo '</div>';
         } else {
             echo '<div style="background: #f8d7da; border-left: 4px solid #721c24; padding: 12px; margin-bottom: 20px;">';
-            echo '<strong style="color: #721c24;">' . __('Warning: Integrity issues detected', 'pta-schoolbooth') . '</strong>';
-            echo '<p style="color: #721c24;">' . __('Some events may have been tampered with.', 'pta-schoolbooth') . '</p>';
+            echo '<strong style="color: #721c24;">' . __('Warning: Integrity issues detected', 'schoolbooth') . '</strong>';
+            echo '<p style="color: #721c24;">' . __('Some events may have been tampered with.', 'schoolbooth') . '</p>';
             echo '</div>';
         }
         
@@ -495,10 +495,10 @@ class PTASB_Admin_Audit_Viewer {
         <table class="audit-table">
             <thead>
                 <tr>
-                    <th><?php _e('Event', 'pta-schoolbooth'); ?></th>
-                    <th><?php _e('Timestamp', 'pta-schoolbooth'); ?></th>
-                    <th><?php _e('Digest Valid', 'pta-schoolbooth'); ?></th>
-                    <th><?php _e('Chain Valid', 'pta-schoolbooth'); ?></th>
+                    <th><?php _e('Event', 'schoolbooth'); ?></th>
+                    <th><?php _e('Timestamp', 'schoolbooth'); ?></th>
+                    <th><?php _e('Digest Valid', 'schoolbooth'); ?></th>
+                    <th><?php _e('Chain Valid', 'schoolbooth'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -530,4 +530,6 @@ class PTASB_Admin_Audit_Viewer {
         // Future: add settings page here
     }
 }
+
+
 

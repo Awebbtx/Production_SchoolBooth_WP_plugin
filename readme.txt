@@ -23,10 +23,10 @@ This plugin provides:
 
 == Installation ==
 
-1. Upload the plugin files to the /wp-content/plugins/pta-schoolbooth-photo-manager directory
+1. Upload the plugin files to the /wp-content/plugins/schoolbooth-photo-manager directory
 2. Activate the plugin through the Plugins menu in WordPress
 3. Configure settings under Settings > Photo Downloads
-4. Use the [pta_schoolbooth_download_portal] shortcode or create a page automatically
+4. Use the [schoolbooth_download_portal] shortcode or create a page automatically
 
 == Changelog ==
 
@@ -41,3 +41,4 @@ This plugin provides:
 * Improved security
 * Better error handling
 * Added expiration countdown display
+

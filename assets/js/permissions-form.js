@@ -6,8 +6,8 @@
 (function($) {
     'use strict';
     $(document).ready(function() {
-        const cfg = window.ptasb_form_vars || {};
-        const $form = $('#pta-schoolbooth-permissions-form');
+        const cfg = window.schoolbooth_form_vars || {};
+        const $form = $('#schoolbooth-permissions-form');
         if ($form.length === 0) {
             return;
         }
@@ -148,4 +148,6 @@
         }
     });
 })(jQuery);
+
+
 

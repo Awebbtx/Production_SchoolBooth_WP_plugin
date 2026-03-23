@@ -1,5 +1,5 @@
-<?php
-class PTASB_Download_Handler {
+﻿<?php
+class SCHOOLBOOTH_Download_Handler {
     private static $instance;
     protected $options;
     
@@ -11,72 +11,72 @@ class PTASB_Download_Handler {
     }
     
     private function __construct() {
-        $this->options = get_option('pta_schoolbooth_settings');
+        $this->options = get_option('schoolbooth_settings');
         add_action('template_redirect', [$this, 'handle_download']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
     
     public function enqueue_scripts() {
         wp_enqueue_style(
-            'pta-schoolbooth-permissions-style',
-            PTASB_DOWNLOAD_URL . 'assets/css/permissions-form.css',
+            'schoolbooth-permissions-style',
+            SCHOOLBOOTH_DOWNLOAD_URL . 'assets/css/permissions-form.css',
             [],
-            PTASB_DOWNLOAD_VERSION
+            SCHOOLBOOTH_DOWNLOAD_VERSION
         );
 
         wp_enqueue_script(
-            'pta-schoolbooth-js',
-            PTASB_DOWNLOAD_URL . 'assets/js/script.js',
+            'schoolbooth-js',
+            SCHOOLBOOTH_DOWNLOAD_URL . 'assets/js/script.js',
             ['jquery'],
-            PTASB_DOWNLOAD_VERSION,
+            SCHOOLBOOTH_DOWNLOAD_VERSION,
             true
         );
 
         wp_enqueue_script(
-            'pta-schoolbooth-permissions-js',
-            PTASB_DOWNLOAD_URL . 'assets/js/permissions-form.js',
+            'schoolbooth-permissions-js',
+            SCHOOLBOOTH_DOWNLOAD_URL . 'assets/js/permissions-form.js',
             ['jquery'],
-            PTASB_DOWNLOAD_VERSION,
+            SCHOOLBOOTH_DOWNLOAD_VERSION,
             true
         );
         
-        wp_localize_script('pta-schoolbooth-js', 'ptasb_vars', [
+        wp_localize_script('schoolbooth-js', 'schoolbooth_vars', [
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('ptasb_ajax'),
-            'delete_confirm' => __('Are you sure you want to delete this photo?', 'pta-schoolbooth'),
-            'no_photos' => __('No photos available', 'pta-schoolbooth'),
-            'delete_error' => __('Failed to delete photo', 'pta-schoolbooth')
+            'nonce' => wp_create_nonce('schoolbooth_ajax'),
+            'delete_confirm' => __('Are you sure you want to delete this photo?', 'schoolbooth'),
+            'no_photos' => __('No photos available', 'schoolbooth'),
+            'delete_error' => __('Failed to delete photo', 'schoolbooth')
         ]);
 
-        wp_localize_script('pta-schoolbooth-permissions-js', 'ptasb_form_vars', [
+        wp_localize_script('schoolbooth-permissions-js', 'schoolbooth_form_vars', [
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'processing' => __('Processing...', 'pta-schoolbooth'),
-            'thanks' => __('Thank you! Your consent has been recorded.', 'pta-schoolbooth'),
-            'redirecting' => __('Redirecting to your photos...', 'pta-schoolbooth'),
-            'generic_error' => __('An error occurred while processing your form. Please try again.', 'pta-schoolbooth'),
-            'timeout_error' => __('Request timed out. Please try again.', 'pta-schoolbooth'),
-            'rate_limit_error' => __('Too many attempts. Please try again in one hour.', 'pta-schoolbooth'),
-            'first_name_error' => __('First name is required and must be at least 2 characters', 'pta-schoolbooth'),
-            'last_name_error' => __('Last name is required and must be at least 2 characters', 'pta-schoolbooth'),
-            'email_error' => __('A valid email address is required', 'pta-schoolbooth'),
-            'consent_error' => __('You must agree to the release form', 'pta-schoolbooth'),
-            'submit_error' => __('Failed to submit form. Please try again.', 'pta-schoolbooth')
+            'processing' => __('Processing...', 'schoolbooth'),
+            'thanks' => __('Thank you! Your consent has been recorded.', 'schoolbooth'),
+            'redirecting' => __('Redirecting to your photos...', 'schoolbooth'),
+            'generic_error' => __('An error occurred while processing your form. Please try again.', 'schoolbooth'),
+            'timeout_error' => __('Request timed out. Please try again.', 'schoolbooth'),
+            'rate_limit_error' => __('Too many attempts. Please try again in one hour.', 'schoolbooth'),
+            'first_name_error' => __('First name is required and must be at least 2 characters', 'schoolbooth'),
+            'last_name_error' => __('Last name is required and must be at least 2 characters', 'schoolbooth'),
+            'email_error' => __('A valid email address is required', 'schoolbooth'),
+            'consent_error' => __('You must agree to the release form', 'schoolbooth'),
+            'submit_error' => __('Failed to submit form. Please try again.', 'schoolbooth')
         ]);
     }
     
     public function handle_download() {
-        if (!isset($_GET['pta_schoolbooth_download']) || !isset($_GET['code']) || !isset($_GET['hash'])) {
+        if (!isset($_GET['schoolbooth_download']) || !isset($_GET['code']) || !isset($_GET['hash'])) {
             return;
         }
 
-        $file = sanitize_text_field($_GET['pta_schoolbooth_download']);
-        $code = ptasb_normalize_access_code(sanitize_text_field($_GET['code']));
+        $file = sanitize_text_field($_GET['schoolbooth_download']);
+        $code = schoolbooth_normalize_access_code(sanitize_text_field($_GET['code']));
         $received_hash = sanitize_text_field($_GET['hash']);
         $is_app_view = $this->is_app_view_request($file, $code);
 
         if (!$this->validate_hash($file, $code, $received_hash)) {
             // Log failed validation attempt
-            $audit = PTASB_Audit_Logger::init();
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('download_attempt', [
                 'file'     => $file,
                 'code'     => $code,
@@ -84,14 +84,14 @@ class PTASB_Download_Handler {
                 'reason'   => 'invalid_hash',
             ]);
             
-            wp_die(__('Invalid security token', 'pta-schoolbooth'), 403);
+            wp_die(__('Invalid security token', 'schoolbooth'), 403);
         }
         
         // Check rate limiting on access code
-        $rate_limiter = PTASB_Rate_Limiter::init();
+        $rate_limiter = SCHOOLBOOTH_Rate_Limiter::init();
         $rate_check = $rate_limiter->check_access_code_attempt($code);
         if (is_wp_error($rate_check)) {
-            $audit = PTASB_Audit_Logger::init();
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('download_attempt', [
                 'file'     => $file,
                 'code'     => $code,
@@ -99,12 +99,12 @@ class PTASB_Download_Handler {
                 'reason'   => 'rate_limited',
             ]);
             
-            wp_die(__('Too many failed attempts. Please try again later.', 'pta-schoolbooth'), 429);
+            wp_die(__('Too many failed attempts. Please try again later.', 'schoolbooth'), 429);
         }
 
         // Check if permissions form was completed
-        if (!$is_app_view && !PTASB_Permissions_Form_Handler::has_completed_form($code)) {
-            $audit = PTASB_Audit_Logger::init();
+        if (!$is_app_view && !SCHOOLBOOTH_Permissions_Form_Handler::has_completed_form($code)) {
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('download_attempt', [
                 'file'     => $file,
                 'code'     => $code,
@@ -112,13 +112,13 @@ class PTASB_Download_Handler {
                 'reason'   => 'form_not_completed',
             ]);
             
-            wp_die(__('You must complete the permissions form before downloading.', 'pta-schoolbooth'), 403);
+            wp_die(__('You must complete the permissions form before downloading.', 'schoolbooth'), 403);
         }
 
         if (isset($_GET['force_download'])) {
             $this->process_download($file, $code);
         } elseif ($is_app_view) {
-            if (isset($_GET['ptasb_preview_asset'])) {
+            if (isset($_GET['schoolbooth_preview_asset'])) {
                 $this->process_download($file, $code, false);
             }
 
@@ -129,11 +129,11 @@ class PTASB_Download_Handler {
     }
     
     protected function validate_hash($file, $code, $received_hash) {
-        if (!defined('PTASB_SHARED_SECRET')) {
+        if (!defined('SCHOOLBOOTH_SHARED_SECRET')) {
             return false;
         }
 
-        $expected_hash = hash_hmac('sha256', $file . '|' . $code, PTASB_SHARED_SECRET);
+        $expected_hash = hash_hmac('sha256', $file . '|' . $code, SCHOOLBOOTH_SHARED_SECRET);
         return hash_equals($expected_hash, $received_hash);
     }
 
@@ -154,7 +154,7 @@ class PTASB_Download_Handler {
 
     protected function get_photos_root() {
         $upload_dir = wp_upload_dir();
-        $base_path = isset($this->options['upload_path']) ? $this->options['upload_path'] : 'pta-schoolbooth';
+        $base_path = isset($this->options['upload_path']) ? $this->options['upload_path'] : 'schoolbooth';
         return wp_normalize_path(path_join($upload_dir['basedir'], $base_path . '/photos'));
     }
 
@@ -185,7 +185,7 @@ class PTASB_Download_Handler {
 
     protected function get_codes_file_path() {
         $upload_dir = wp_upload_dir();
-        $base_path = isset($this->options['upload_path']) ? $this->options['upload_path'] : 'pta-schoolbooth';
+        $base_path = isset($this->options['upload_path']) ? $this->options['upload_path'] : 'schoolbooth';
         return path_join($upload_dir['basedir'], $base_path . '/access_codes.json');
     }
 
@@ -217,11 +217,11 @@ class PTASB_Download_Handler {
     }
 
     protected function generate_signature($file, $code) {
-        return hash_hmac('sha256', $file . '|' . $code, PTASB_SHARED_SECRET);
+        return hash_hmac('sha256', $file . '|' . $code, SCHOOLBOOTH_SHARED_SECRET);
     }
 
     protected function generate_app_view_signature($file, $code, $timestamp) {
-        return hash_hmac('sha256', $timestamp . '|' . $file . '|' . $code . '|app-view', PTASB_SHARED_SECRET);
+        return hash_hmac('sha256', $timestamp . '|' . $file . '|' . $code . '|app-view', SCHOOLBOOTH_SHARED_SECRET);
     }
 
     protected function is_app_timestamp_valid($timestamp) {
@@ -233,16 +233,16 @@ class PTASB_Download_Handler {
     }
 
     protected function is_app_view_request($file, $code) {
-        if (!isset($_GET['ptasb_app'], $_GET['ptasb_ts'], $_GET['ptasb_sig'])) {
+        if (!isset($_GET['schoolbooth_app'], $_GET['schoolbooth_ts'], $_GET['schoolbooth_sig'])) {
             return false;
         }
 
-        if (sanitize_text_field($_GET['ptasb_app']) !== '1') {
+        if (sanitize_text_field($_GET['schoolbooth_app']) !== '1') {
             return false;
         }
 
-        $timestamp = sanitize_text_field($_GET['ptasb_ts']);
-        $received_signature = sanitize_text_field($_GET['ptasb_sig']);
+        $timestamp = sanitize_text_field($_GET['schoolbooth_ts']);
+        $received_signature = sanitize_text_field($_GET['schoolbooth_sig']);
 
         if (!$this->is_app_timestamp_valid($timestamp)) {
             return false;
@@ -253,7 +253,7 @@ class PTASB_Download_Handler {
     }
 
     protected function generate_delete_token($file, $code, $expires_at) {
-        return hash_hmac('sha256', $file . '|' . $code . '|' . (string) $expires_at, PTASB_SHARED_SECRET);
+        return hash_hmac('sha256', $file . '|' . $code . '|' . (string) $expires_at, SCHOOLBOOTH_SHARED_SECRET);
     }
 
     protected function verify_delete_token($file, $code, $expires_at, $received_token) {
@@ -269,13 +269,13 @@ class PTASB_Download_Handler {
     protected function process_download($file, $code, $as_attachment = true) {
         $file = $this->normalize_requested_file($file);
         if ($file === '') {
-            wp_die(__('Invalid file path', 'pta-schoolbooth'), 400);
+            wp_die(__('Invalid file path', 'schoolbooth'), 400);
         }
 
         $codes = $this->load_codes();
-        $stored_code = isset($codes[$file]['code']) ? ptasb_normalize_access_code($codes[$file]['code']) : '';
+        $stored_code = isset($codes[$file]['code']) ? schoolbooth_normalize_access_code($codes[$file]['code']) : '';
         if (!isset($codes[$file]) || $stored_code !== $code) {
-            $audit = PTASB_Audit_Logger::init();
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('download_attempt', [
                 'file'     => $file,
                 'code'     => $code,
@@ -283,12 +283,12 @@ class PTASB_Download_Handler {
                 'reason'   => 'invalid_code',
             ]);
             
-            wp_die(__('Invalid access code', 'pta-schoolbooth'), 403);
+            wp_die(__('Invalid access code', 'schoolbooth'), 403);
         }
 
         $record = $codes[$file];
         if ($this->is_record_expired($record)) {
-            $audit = PTASB_Audit_Logger::init();
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('download_attempt', [
                 'file'     => $file,
                 'code'     => $code,
@@ -296,13 +296,13 @@ class PTASB_Download_Handler {
                 'reason'   => 'expired',
             ]);
             
-            wp_die(__('This download link has expired', 'pta-schoolbooth'), 410);
+            wp_die(__('This download link has expired', 'schoolbooth'), 410);
         }
 
         $download_limit = (int) (isset($this->options['download_limit']) ? $this->options['download_limit'] : 3);
         $downloads = (int) (isset($record['downloads']) ? $record['downloads'] : 0);
         if ($downloads >= $download_limit) {
-            $audit = PTASB_Audit_Logger::init();
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('download_attempt', [
                 'file'     => $file,
                 'code'     => $code,
@@ -310,12 +310,12 @@ class PTASB_Download_Handler {
                 'reason'   => 'download_limit_exceeded',
             ]);
             
-            wp_die(__('Download limit reached', 'pta-schoolbooth'), 403);
+            wp_die(__('Download limit reached', 'schoolbooth'), 403);
         }
 
         $file_path = $this->resolve_photo_path($file);
         if ($file_path === '' || !is_file($file_path)) {
-            $audit = PTASB_Audit_Logger::init();
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('download_attempt', [
                 'file'     => $file,
                 'code'     => $code,
@@ -323,13 +323,13 @@ class PTASB_Download_Handler {
                 'reason'   => 'file_not_found',
             ]);
             
-            wp_die(__('File not found', 'pta-schoolbooth'), 404);
+            wp_die(__('File not found', 'schoolbooth'), 404);
         }
 
         // Update download count (atomic operation with transaction)
         $update_result = $this->update_download_count($file, $code);
         if (!$update_result) {
-            $audit = PTASB_Audit_Logger::init();
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('download_attempt', [
                 'file'     => $file,
                 'code'     => $code,
@@ -337,11 +337,11 @@ class PTASB_Download_Handler {
                 'reason'   => 'update_count_failed',
             ]);
             
-            wp_die(__('Unable to authorize download', 'pta-schoolbooth'), 403);
+            wp_die(__('Unable to authorize download', 'schoolbooth'), 403);
         }
 
         // Log successful download
-        $audit = PTASB_Audit_Logger::init();
+        $audit = SCHOOLBOOTH_Audit_Logger::init();
         $audit->log_event('download_attempt', [
             'file'     => $file,
             'code'     => $code,
@@ -350,7 +350,7 @@ class PTASB_Download_Handler {
         ]);
         
         // Clear rate limit counter on successful access
-        $rate_limiter = PTASB_Rate_Limiter::init();
+        $rate_limiter = SCHOOLBOOTH_Rate_Limiter::init();
         $rate_limiter->clear_access_code_attempts($code);
 
         $mime_type = mime_content_type($file_path);
@@ -375,13 +375,13 @@ class PTASB_Download_Handler {
         }
         $downloads_remaining = max(0, $download_limit - $downloads_used);
         $download_url = add_query_arg([
-            'pta_schoolbooth_download' => $file,
+            'schoolbooth_download' => $file,
             'code' => $code,
             'hash' => $received_hash,
             'force_download' => 1,
         ], home_url('/'));
         $share_url = add_query_arg([
-            'pta_schoolbooth_download' => $file,
+            'schoolbooth_download' => $file,
             'code' => $code,
             'hash' => $received_hash,
         ], home_url('/'));
@@ -390,17 +390,17 @@ class PTASB_Download_Handler {
         $delete_token = $this->generate_delete_token($file, $code, $delete_expires);
 
         $preview_url = add_query_arg([
-            'pta_schoolbooth_download' => $file,
+            'schoolbooth_download' => $file,
             'code' => $code,
             'hash' => $received_hash,
-            'ptasb_app' => 1,
-            'ptasb_ts' => sanitize_text_field(isset($_GET['ptasb_ts']) ? $_GET['ptasb_ts'] : ''),
-            'ptasb_sig' => sanitize_text_field(isset($_GET['ptasb_sig']) ? $_GET['ptasb_sig'] : ''),
-            'ptasb_preview_asset' => 1,
+            'schoolbooth_app' => 1,
+            'schoolbooth_ts' => sanitize_text_field(isset($_GET['schoolbooth_ts']) ? $_GET['schoolbooth_ts'] : ''),
+            'schoolbooth_sig' => sanitize_text_field(isset($_GET['schoolbooth_sig']) ? $_GET['schoolbooth_sig'] : ''),
+            'schoolbooth_preview_asset' => 1,
         ], home_url('/'));
 
         $title = sprintf(
-            __('Photo Preview: %s', 'pta-schoolbooth'),
+            __('Photo Preview: %s', 'schoolbooth'),
             basename($file)
         );
 
@@ -428,27 +428,27 @@ class PTASB_Download_Handler {
         echo '.status{margin-top:10px;font-size:13px;color:#93c5fd;}';
         echo '</style></head><body>';
         echo '<div class="wrap"><div class="panel">';
-        echo '<p class="meta"><strong>' . esc_html__('Upload verified', 'pta-schoolbooth') . '</strong><br>' . esc_html(basename($file)) . '</p>';
-        echo '<p class="meta meta-line">' . esc_html__('Downloads used:', 'pta-schoolbooth') . ' ' . (int) $downloads_used . ' / ' . (int) $download_limit . ' &middot; ' . esc_html__('Remaining:', 'pta-schoolbooth') . ' ' . (int) $downloads_remaining . '</p>';
+        echo '<p class="meta"><strong>' . esc_html__('Upload verified', 'schoolbooth') . '</strong><br>' . esc_html(basename($file)) . '</p>';
+        echo '<p class="meta meta-line">' . esc_html__('Downloads used:', 'schoolbooth') . ' ' . (int) $downloads_used . ' / ' . (int) $download_limit . ' &middot; ' . esc_html__('Remaining:', 'schoolbooth') . ' ' . (int) $downloads_remaining . '</p>';
         echo '<img class="image" src="' . esc_url($preview_url) . '" alt="' . esc_attr(basename($file)) . '">';
         echo '<div class="actions">';
-        echo '<a class="btn" href="' . esc_url($download_url) . '">' . esc_html__('Download', 'pta-schoolbooth') . '</a>';
-        echo '<button class="btn" id="ptasb-print-btn" type="button">' . esc_html__('Print', 'pta-schoolbooth') . '</button>';
-        echo '<button class="btn" id="ptasb-share-btn" type="button" data-share-url="' . esc_attr($share_url) . '">' . esc_html__('Share', 'pta-schoolbooth') . '</button>';
+        echo '<a class="btn" href="' . esc_url($download_url) . '">' . esc_html__('Download', 'schoolbooth') . '</a>';
+        echo '<button class="btn" id="schoolbooth-print-btn" type="button">' . esc_html__('Print', 'schoolbooth') . '</button>';
+        echo '<button class="btn" id="schoolbooth-share-btn" type="button" data-share-url="' . esc_attr($share_url) . '">' . esc_html__('Share', 'schoolbooth') . '</button>';
         if ($can_delete) {
-            echo '<button class="btn btn-danger" id="ptasb-delete-btn" type="button" data-file="' . esc_attr($file) . '" data-code="' . esc_attr($code) . '" data-delete-token="' . esc_attr($delete_token) . '" data-delete-expires="' . esc_attr((string) $delete_expires) . '">' . esc_html__('Delete', 'pta-schoolbooth') . '</button>';
+            echo '<button class="btn btn-danger" id="schoolbooth-delete-btn" type="button" data-file="' . esc_attr($file) . '" data-code="' . esc_attr($code) . '" data-delete-token="' . esc_attr($delete_token) . '" data-delete-expires="' . esc_attr((string) $delete_expires) . '">' . esc_html__('Delete', 'schoolbooth') . '</button>';
         }
         echo '</div>';
-        echo '<div id="ptasb-preview-status" class="status"></div>';
+        echo '<div id="schoolbooth-preview-status" class="status"></div>';
         echo '<script>';
         echo '(function(){';
-        echo 'var printBtn=document.getElementById("ptasb-print-btn");';
+        echo 'var printBtn=document.getElementById("schoolbooth-print-btn");';
         echo 'if(printBtn){printBtn.addEventListener("click",function(){window.print();});}';
-        echo 'var shareBtn=document.getElementById("ptasb-share-btn");';
-        echo 'var statusEl=document.getElementById("ptasb-preview-status");';
+        echo 'var shareBtn=document.getElementById("schoolbooth-share-btn");';
+        echo 'var statusEl=document.getElementById("schoolbooth-preview-status");';
         echo 'if(shareBtn){shareBtn.addEventListener("click",function(){var url=shareBtn.getAttribute("data-share-url");if(navigator.share){navigator.share({title:"Photo",url:url}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){statusEl.textContent="Share link copied to clipboard.";});}});}';
-        echo 'var delBtn=document.getElementById("ptasb-delete-btn");';
-        echo 'if(delBtn){delBtn.addEventListener("click",function(){if(!confirm("Delete this photo?")){return;} var confirmText=window.prompt("Type DELETE to confirm permanent deletion.", ""); if(confirmText!=="DELETE"){statusEl.textContent="Deletion canceled."; return;} var data=new FormData(); data.append("action","ptasb_delete_photo"); data.append("file",delBtn.getAttribute("data-file")); data.append("code",delBtn.getAttribute("data-code")); data.append("delete_token",delBtn.getAttribute("data-delete-token")); data.append("delete_expires",delBtn.getAttribute("data-delete-expires")); data.append("security","' . esc_js(wp_create_nonce('ptasb_ajax')) . '"); fetch("' . esc_url(admin_url('admin-ajax.php')) . '",{method:"POST",body:data,credentials:"same-origin"}).then(function(r){return r.json();}).then(function(res){if(res&&res.success){statusEl.textContent="Photo deleted."; setTimeout(function(){window.location.href="' . esc_url(home_url('/')) . '";},800);}else{statusEl.textContent="Delete failed.";}}).catch(function(){statusEl.textContent="Delete failed.";});});}';
+        echo 'var delBtn=document.getElementById("schoolbooth-delete-btn");';
+        echo 'if(delBtn){delBtn.addEventListener("click",function(){if(!confirm("Delete this photo?")){return;} var confirmText=window.prompt("Type DELETE to confirm permanent deletion.", ""); if(confirmText!=="DELETE"){statusEl.textContent="Deletion canceled."; return;} var data=new FormData(); data.append("action","schoolbooth_delete_photo"); data.append("file",delBtn.getAttribute("data-file")); data.append("code",delBtn.getAttribute("data-code")); data.append("delete_token",delBtn.getAttribute("data-delete-token")); data.append("delete_expires",delBtn.getAttribute("data-delete-expires")); data.append("security","' . esc_js(wp_create_nonce('schoolbooth_ajax')) . '"); fetch("' . esc_url(admin_url('admin-ajax.php')) . '",{method:"POST",body:data,credentials:"same-origin"}).then(function(r){return r.json();}).then(function(res){if(res&&res.success){statusEl.textContent="Photo deleted."; setTimeout(function(){window.location.href="' . esc_url(home_url('/')) . '";},800);}else{statusEl.textContent="Delete failed.";}}).catch(function(){statusEl.textContent="Delete failed.";});});}';
         echo '})();';
         echo '</script>';
         echo '</div></div></body></html>';
@@ -481,14 +481,14 @@ class PTASB_Download_Handler {
                 AND post_status = 'publish' 
                 AND post_content LIKE %s 
                 LIMIT 1",
-                '%[pta_schoolbooth_download_portal]%'
+                '%[schoolbooth_download_portal]%'
             )
         );
 
         if ($page_id) {
-            $options = get_option('pta_schoolbooth_settings');
+            $options = get_option('schoolbooth_settings');
             $options['download_page_id'] = $page_id;
-            update_option('pta_schoolbooth_settings', $options);
+            update_option('schoolbooth_settings', $options);
         }
 
         return $page_id;
@@ -499,7 +499,7 @@ class PTASB_Download_Handler {
         if (preg_match('/^([^,_]+)/', $filename, $matches)) {
             return str_replace('_', ' ', $matches[1]);
         }
-        return __('Capture', 'pta-schoolbooth');
+        return __('Capture', 'schoolbooth');
     }
     
     public function get_photos_data($code) {
@@ -508,7 +508,7 @@ class PTASB_Download_Handler {
         $download_limit = (int) (isset($this->options['download_limit']) ? $this->options['download_limit'] : 3);
         
         foreach ($codes as $file => $data) {
-            if (ptasb_normalize_access_code(isset($data['code']) ? $data['code'] : '') === $code) {
+            if (schoolbooth_normalize_access_code(isset($data['code']) ? $data['code'] : '') === $code) {
                 $capture_label = $this->get_capture_label_from_file(isset($data['filename']) ? $data['filename'] : $file);
 
                 if ($this->is_record_expired($data)) {
@@ -534,7 +534,7 @@ class PTASB_Download_Handler {
                         'downloads_remaining' => max(0, $download_limit - $downloads),
                         'expiry_days' => $this->calculate_expiry_days(isset($data['created']) ? $data['created'] : current_time('mysql')),
                         'download_url' => add_query_arg([
-                            'pta_schoolbooth_download' => $file,
+                            'schoolbooth_download' => $file,
                             'code' => $code,
                             'hash' => $this->generate_signature($file, $code),
                             'force_download' => 1
@@ -560,7 +560,7 @@ class PTASB_Download_Handler {
     
     public function delete_photo($file, $code, $delete_token = '', $delete_expires = 0) {
         $file = $this->normalize_requested_file($file);
-        $code = ptasb_normalize_access_code($code);
+        $code = schoolbooth_normalize_access_code($code);
         if ($file === '') {
             return false;
         }
@@ -571,11 +571,11 @@ class PTASB_Download_Handler {
 
         $codes_file = $this->get_codes_file_path();
         $codes = $this->load_codes();
-        if (isset($codes[$file]) && ptasb_normalize_access_code($codes[$file]['code']) === $code) {
+        if (isset($codes[$file]) && schoolbooth_normalize_access_code($codes[$file]['code']) === $code) {
             $file_path = $this->resolve_photo_path($file);
             if (!empty($file_path) && file_exists($file_path)) {
                 // Use secure deletion
-                $deleter = PTASB_Secure_File_Deleter::init();
+                $deleter = SCHOOLBOOTH_Secure_File_Deleter::init();
                 $delete_result = $deleter::secure_delete($file_path, true);
                 
                 if (is_wp_error($delete_result)) {
@@ -584,7 +584,7 @@ class PTASB_Download_Handler {
             }
             
             // Log the manual deletion
-            $audit = PTASB_Audit_Logger::init();
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('manual_delete', [
                 'file'     => $file,
                 'code'     => $code,
@@ -600,7 +600,7 @@ class PTASB_Download_Handler {
     
     protected function update_download_count($file, $code) {
         $file = $this->normalize_requested_file($file);
-        $code = ptasb_normalize_access_code($code);
+        $code = schoolbooth_normalize_access_code($code);
         if ($file === '') {
             return false;
         }
@@ -612,7 +612,7 @@ class PTASB_Download_Handler {
 
         $codes = $this->load_codes();
         
-        if (isset($codes[$file]) && ptasb_normalize_access_code($codes[$file]['code']) === $code) {
+        if (isset($codes[$file]) && schoolbooth_normalize_access_code($codes[$file]['code']) === $code) {
             if ($this->is_record_expired($codes[$file])) {
                 return false;
             }
@@ -634,7 +634,7 @@ class PTASB_Download_Handler {
                     $file_path = $this->resolve_photo_path($file);
                     if (!empty($file_path) && file_exists($file_path)) {
                         // Use secure deletion
-                        $deleter = PTASB_Secure_File_Deleter::init();
+                        $deleter = SCHOOLBOOTH_Secure_File_Deleter::init();
                         $delete_result = $deleter::secure_delete($file_path, true);
                         
                         if (!is_wp_error($delete_result)) {
@@ -665,3 +665,5 @@ class PTASB_Download_Handler {
         }
     }
 }
+
+

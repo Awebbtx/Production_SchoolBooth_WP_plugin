@@ -75,7 +75,7 @@
             return;
         }
 
-        if (!confirm(ptasb_vars.delete_confirm)) return;
+        if (!confirm(schoolbooth_vars.delete_confirm)) return;
         
         var $card = $btn.closest('.photo-card');
         var file = $btn.data('file');
@@ -85,28 +85,29 @@
 
         $btn.data('deleting', true).prop('disabled', true);
         
-        $.post(ptasb_vars.ajaxurl, {
-            action: 'ptasb_delete_photo',
+        $.post(schoolbooth_vars.ajaxurl, {
+            action: 'schoolbooth_delete_photo',
             file: file,
             code: code,
             delete_token: deleteToken,
             delete_expires: deleteExpires,
-            security: ptasb_vars.nonce
+            security: schoolbooth_vars.nonce
         }, function(response) {
             if (response.success) {
                 $card.fadeOut(300, function() {
                     $(this).remove();
                     if ($('.photo-card').length === 0) {
-                        $('.photo-grid').after('<p class="no-photos">' + ptasb_vars.no_photos + '</p>');
+                        $('.photo-grid').after('<p class="no-photos">' + schoolbooth_vars.no_photos + '</p>');
                     }
                 });
             } else {
                 alert(response.data);
             }
         }).fail(function() {
-            alert(ptasb_vars.delete_error);
+            alert(schoolbooth_vars.delete_error);
         }).always(function() {
             $btn.data('deleting', false).prop('disabled', false);
         });
     });
 });
+

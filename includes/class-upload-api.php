@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 
-class PTASB_Upload_API {
+class SCHOOLBOOTH_Upload_API {
     private static $instance;
 
     public static function init() {
@@ -15,19 +15,19 @@ class PTASB_Upload_API {
     }
 
     public function register_routes() {
-        register_rest_route('pta-schoolbooth/v1', '/ping', [
+        register_rest_route('schoolbooth/v1', '/ping', [
             'methods' => 'POST',
             'callback' => [$this, 'handle_ping'],
             'permission_callback' => '__return_true',
         ]);
 
-        register_rest_route('pta-schoolbooth/v1', '/enroll', [
+        register_rest_route('schoolbooth/v1', '/enroll', [
             'methods' => 'POST',
             'callback' => [$this, 'handle_enroll'],
             'permission_callback' => [$this, 'can_enroll'],
         ]);
 
-        register_rest_route('pta-schoolbooth/v1', '/ingest', [
+        register_rest_route('schoolbooth/v1', '/ingest', [
             'methods' => 'POST',
             'callback' => [$this, 'handle_ingest'],
             'permission_callback' => '__return_true',
@@ -36,11 +36,11 @@ class PTASB_Upload_API {
 
     public function can_enroll() {
         if (!is_user_logged_in()) {
-            return new WP_Error('ptasb_enroll_auth_required', __('Authentication required for enrollment', 'pta-schoolbooth'), ['status' => 401]);
+            return new WP_Error('schoolbooth_enroll_auth_required', __('Authentication required for enrollment', 'schoolbooth'), ['status' => 401]);
         }
 
         if (!current_user_can('manage_options')) {
-            return new WP_Error('ptasb_enroll_forbidden', __('Insufficient permissions for enrollment', 'pta-schoolbooth'), ['status' => 403]);
+            return new WP_Error('schoolbooth_enroll_forbidden', __('Insufficient permissions for enrollment', 'schoolbooth'), ['status' => 403]);
         }
 
         return true;
@@ -57,10 +57,10 @@ class PTASB_Upload_API {
             : '';
 
         if ($provided_secret !== '' && strlen($provided_secret) < 32) {
-            return new WP_Error('ptasb_secret_weak', __('Shared secret must be at least 32 characters', 'pta-schoolbooth'), ['status' => 400]);
+            return new WP_Error('schoolbooth_secret_weak', __('Shared secret must be at least 32 characters', 'schoolbooth'), ['status' => 400]);
         }
 
-        $settings = get_option('pta_schoolbooth_settings', []);
+        $settings = get_option('schoolbooth_settings', []);
         if (!is_array($settings)) {
             $settings = [];
         }
@@ -98,11 +98,11 @@ class PTASB_Upload_API {
         $settings['enrolled_devices'] = $enrolled_devices;
         $settings['last_enrolled_at'] = $device_entry['enrolled_at'];
         $settings['last_enrolled_by'] = $current_user->user_login;
-        update_option('pta_schoolbooth_settings', $settings, false);
+        update_option('schoolbooth_settings', $settings, false);
 
         $endpoint = isset($settings['rest_api_endpoint'])
             ? (string) $settings['rest_api_endpoint']
-            : '/wp-json/pta-schoolbooth/v1/ingest';
+            : '/wp-json/schoolbooth/v1/ingest';
         $endpoint = '/' . ltrim($endpoint, '/');
 
         return rest_ensure_response([
@@ -121,11 +121,11 @@ class PTASB_Upload_API {
             return $auth;
         }
 
-        $settings = get_option('pta_schoolbooth_settings', []);
-            return rest_ensure_response([
-                'success' => true,
-                'message' => 'Schoolbooth upload API reachable',
-            'upload_path' => isset($settings['upload_path']) ? $settings['upload_path'] : 'pta-schoolbooth',
+        $settings = get_option('schoolbooth_settings', []);
+        return rest_ensure_response([
+            'success' => true,
+            'message' => 'Schoolbooth upload API reachable',
+            'upload_path' => isset($settings['upload_path']) ? $settings['upload_path'] : 'schoolbooth',
         ]);
     }
 
@@ -134,21 +134,21 @@ class PTASB_Upload_API {
 
         $file_rel_path = isset($payload['file_rel_path']) ? sanitize_text_field($payload['file_rel_path']) : '';
         $access_code_raw = isset($payload['access_code']) ? sanitize_text_field($payload['access_code']) : '';
-        $access_code = ptasb_normalize_access_code($access_code_raw);
+        $access_code = schoolbooth_normalize_access_code($access_code_raw);
         $image_b64 = isset($payload['image_b64']) ? (string) $payload['image_b64'] : '';
 
         if ($file_rel_path === '' || $access_code === '' || $image_b64 === '') {
-            return new WP_Error('ptasb_bad_request', __('Missing required upload fields', 'pta-schoolbooth'), ['status' => 400]);
+            return new WP_Error('schoolbooth_bad_request', __('Missing required upload fields', 'schoolbooth'), ['status' => 400]);
         }
 
         $normalized_rel_path = $this->normalize_relative_path($file_rel_path);
         if ($normalized_rel_path === '') {
-            return new WP_Error('ptasb_invalid_path', __('Invalid file path', 'pta-schoolbooth'), ['status' => 400]);
+            return new WP_Error('schoolbooth_invalid_path', __('Invalid file path', 'schoolbooth'), ['status' => 400]);
         }
 
         $image_bytes = base64_decode($image_b64, true);
         if ($image_bytes === false || $image_bytes === '') {
-            return new WP_Error('ptasb_invalid_image', __('Invalid image payload', 'pta-schoolbooth'), ['status' => 400]);
+            return new WP_Error('schoolbooth_invalid_image', __('Invalid image payload', 'schoolbooth'), ['status' => 400]);
         }
 
         $auth = $this->authenticate_upload($request, $normalized_rel_path, $access_code_raw, $access_code, $image_bytes);
@@ -157,22 +157,22 @@ class PTASB_Upload_API {
         }
 
         $upload_dir = wp_upload_dir();
-        $settings = get_option('pta_schoolbooth_settings', []);
-        $base_path = isset($settings['upload_path']) ? $settings['upload_path'] : 'pta-schoolbooth';
+        $settings = get_option('schoolbooth_settings', []);
+        $base_path = isset($settings['upload_path']) ? $settings['upload_path'] : 'schoolbooth';
 
         $photos_root = wp_normalize_path(path_join($upload_dir['basedir'], $base_path . '/photos'));
         $target_path = wp_normalize_path(path_join($photos_root, $normalized_rel_path));
 
         if (strpos($target_path, $photos_root . '/') !== 0 && $target_path !== $photos_root) {
-            return new WP_Error('ptasb_invalid_target', __('Upload target is outside allowed directory', 'pta-schoolbooth'), ['status' => 400]);
+            return new WP_Error('schoolbooth_invalid_target', __('Upload target is outside allowed directory', 'schoolbooth'), ['status' => 400]);
         }
 
         if (!wp_mkdir_p(dirname($target_path))) {
-            return new WP_Error('ptasb_mkdir_failed', __('Failed to create upload directory', 'pta-schoolbooth'), ['status' => 500]);
+            return new WP_Error('schoolbooth_mkdir_failed', __('Failed to create upload directory', 'schoolbooth'), ['status' => 500]);
         }
 
         if (file_put_contents($target_path, $image_bytes, LOCK_EX) === false) {
-            return new WP_Error('ptasb_write_failed', __('Failed to write uploaded image', 'pta-schoolbooth'), ['status' => 500]);
+            return new WP_Error('schoolbooth_write_failed', __('Failed to write uploaded image', 'schoolbooth'), ['status' => 500]);
         }
 
         $save_result = $this->save_access_code_record($normalized_rel_path, $access_code);
@@ -180,7 +180,7 @@ class PTASB_Upload_API {
             return $save_result;
         }
 
-        $audit = PTASB_Audit_Logger::init();
+        $audit = SCHOOLBOOTH_Audit_Logger::init();
         $audit->log_event('upload', [
             'file' => $normalized_rel_path,
             'code' => $access_code,
@@ -193,19 +193,19 @@ class PTASB_Upload_API {
         ]);
 
         $download_url = add_query_arg([
-            'pta_schoolbooth_download' => $normalized_rel_path,
+            'schoolbooth_download' => $normalized_rel_path,
             'code' => $access_code,
-            'hash' => hash_hmac('sha256', $normalized_rel_path . '|' . $access_code, PTASB_SHARED_SECRET),
+            'hash' => hash_hmac('sha256', $normalized_rel_path . '|' . $access_code, SCHOOLBOOTH_SHARED_SECRET),
         ], home_url('/'));
 
         $app_timestamp = (string) time();
         $app_download_url = add_query_arg([
-            'pta_schoolbooth_download' => $normalized_rel_path,
+            'schoolbooth_download' => $normalized_rel_path,
             'code' => $access_code,
-            'hash' => hash_hmac('sha256', $normalized_rel_path . '|' . $access_code, PTASB_SHARED_SECRET),
-            'ptasb_app' => 1,
-            'ptasb_ts' => $app_timestamp,
-            'ptasb_sig' => hash_hmac('sha256', $app_timestamp . '|' . $normalized_rel_path . '|' . $access_code . '|app-view', PTASB_SHARED_SECRET),
+            'hash' => hash_hmac('sha256', $normalized_rel_path . '|' . $access_code, SCHOOLBOOTH_SHARED_SECRET),
+            'schoolbooth_app' => 1,
+            'schoolbooth_ts' => $app_timestamp,
+            'schoolbooth_sig' => hash_hmac('sha256', $app_timestamp . '|' . $normalized_rel_path . '|' . $access_code . '|app-view', SCHOOLBOOTH_SHARED_SECRET),
         ], home_url('/'));
 
         return rest_ensure_response([
@@ -218,10 +218,10 @@ class PTASB_Upload_API {
     }
 
     private function get_shared_secret() {
-        $settings = get_option('pta_schoolbooth_settings', []);
+        $settings = get_option('schoolbooth_settings', []);
         $secret = isset($settings['shared_secret'])
             ? $settings['shared_secret']
-            : (defined('PTASB_SHARED_SECRET') ? PTASB_SHARED_SECRET : '');
+            : (defined('SCHOOLBOOTH_SHARED_SECRET') ? SCHOOLBOOTH_SHARED_SECRET : '');
         return (string) $secret;
     }
 
@@ -236,23 +236,23 @@ class PTASB_Upload_API {
     private function authenticate_ping(WP_REST_Request $request) {
         $secret = $this->get_shared_secret();
         if (strlen($secret) < 32) {
-            return new WP_Error('ptasb_secret_invalid', __('Server secret is not configured', 'pta-schoolbooth'), ['status' => 500]);
+            return new WP_Error('schoolbooth_secret_invalid', __('Server secret is not configured', 'schoolbooth'), ['status' => 500]);
         }
 
-        $timestamp = (string) $request->get_header('x-ptasb-timestamp');
-        $signature = (string) $request->get_header('x-ptasb-signature');
+        $timestamp = (string) $request->get_header('x-schoolbooth-timestamp');
+        $signature = (string) $request->get_header('x-schoolbooth-signature');
 
         if ($timestamp === '' || $signature === '') {
-            return new WP_Error('ptasb_auth_missing', __('Missing authentication headers', 'pta-schoolbooth'), ['status' => 401]);
+            return new WP_Error('schoolbooth_auth_missing', __('Missing authentication headers', 'schoolbooth'), ['status' => 401]);
         }
 
         if (!$this->is_timestamp_valid($timestamp)) {
-            return new WP_Error('ptasb_timestamp_invalid', __('Invalid or expired timestamp', 'pta-schoolbooth'), ['status' => 401]);
+            return new WP_Error('schoolbooth_timestamp_invalid', __('Invalid or expired timestamp', 'schoolbooth'), ['status' => 401]);
         }
 
         $expected = hash_hmac('sha256', $timestamp . '|ping', $secret);
         if (!hash_equals($expected, $signature)) {
-            return new WP_Error('ptasb_auth_invalid', __('Invalid signature', 'pta-schoolbooth'), ['status' => 401]);
+            return new WP_Error('schoolbooth_auth_invalid', __('Invalid signature', 'schoolbooth'), ['status' => 401]);
         }
 
         return true;
@@ -261,18 +261,18 @@ class PTASB_Upload_API {
     private function authenticate_upload(WP_REST_Request $request, $file_rel_path, $access_code_raw, $access_code_normalized, $image_bytes) {
         $secret = $this->get_shared_secret();
         if (strlen($secret) < 32) {
-            return new WP_Error('ptasb_secret_invalid', __('Server secret is not configured', 'pta-schoolbooth'), ['status' => 500]);
+            return new WP_Error('schoolbooth_secret_invalid', __('Server secret is not configured', 'schoolbooth'), ['status' => 500]);
         }
 
-        $timestamp = (string) $request->get_header('x-ptasb-timestamp');
-        $signature = (string) $request->get_header('x-ptasb-signature');
+        $timestamp = (string) $request->get_header('x-schoolbooth-timestamp');
+        $signature = (string) $request->get_header('x-schoolbooth-signature');
 
         if ($timestamp === '' || $signature === '') {
-            return new WP_Error('ptasb_auth_missing', __('Missing authentication headers', 'pta-schoolbooth'), ['status' => 401]);
+            return new WP_Error('schoolbooth_auth_missing', __('Missing authentication headers', 'schoolbooth'), ['status' => 401]);
         }
 
         if (!$this->is_timestamp_valid($timestamp)) {
-            return new WP_Error('ptasb_timestamp_invalid', __('Invalid or expired timestamp', 'pta-schoolbooth'), ['status' => 401]);
+            return new WP_Error('schoolbooth_timestamp_invalid', __('Invalid or expired timestamp', 'schoolbooth'), ['status' => 401]);
         }
 
         $payload_hash = hash('sha256', $image_bytes);
@@ -282,7 +282,7 @@ class PTASB_Upload_API {
         $expected_normalized = hash_hmac('sha256', $message_normalized, $secret);
 
         if (!hash_equals($expected_raw, $signature) && !hash_equals($expected_normalized, $signature)) {
-            return new WP_Error('ptasb_auth_invalid', __('Invalid signature', 'pta-schoolbooth'), ['status' => 401]);
+            return new WP_Error('schoolbooth_auth_invalid', __('Invalid signature', 'schoolbooth'), ['status' => 401]);
         }
 
         return true;
@@ -320,13 +320,13 @@ class PTASB_Upload_API {
 
     private function save_access_code_record($file_rel_path, $access_code) {
         $upload_dir = wp_upload_dir();
-        $settings = get_option('pta_schoolbooth_settings', []);
-        $base_path = isset($settings['upload_path']) ? $settings['upload_path'] : 'pta-schoolbooth';
+        $settings = get_option('schoolbooth_settings', []);
+        $base_path = isset($settings['upload_path']) ? $settings['upload_path'] : 'schoolbooth';
         $codes_file = path_join($upload_dir['basedir'], $base_path . '/access_codes.json');
 
         $codes_dir = dirname($codes_file);
         if (!wp_mkdir_p($codes_dir)) {
-            return new WP_Error('ptasb_codes_dir_failed', __('Failed to create access code directory', 'pta-schoolbooth'), ['status' => 500]);
+            return new WP_Error('schoolbooth_codes_dir_failed', __('Failed to create access code directory', 'schoolbooth'), ['status' => 500]);
         }
 
         $codes = [];
@@ -345,10 +345,12 @@ class PTASB_Upload_API {
         ];
 
         if (file_put_contents($codes_file, wp_json_encode($codes, JSON_PRETTY_PRINT), LOCK_EX) === false) {
-            return new WP_Error('ptasb_codes_write_failed', __('Failed to write access codes file', 'pta-schoolbooth'), ['status' => 500]);
+            return new WP_Error('schoolbooth_codes_write_failed', __('Failed to write access codes file', 'schoolbooth'), ['status' => 500]);
         }
 
         return true;
     }
 }
+
+
 

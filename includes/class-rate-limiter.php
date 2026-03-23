@@ -1,14 +1,14 @@
-<?php
+﻿<?php
 /**
  * Rate Limiter
  * 
  * Prevents brute force attacks on access codes and form submissions.
  * Uses WordPress transients for distributed rate limiting.
  */
-class PTASB_Rate_Limiter {
-    const CODE_ATTEMPT_KEY = 'ptasb_code_attempt_%s_%s'; // code, ip
-    const FORM_ATTEMPT_KEY = 'ptasb_form_attempt_%s_%s';  // code, ip
-    const CODE_LOCKOUT_KEY = 'ptasb_code_lockout_%s';     // code
+class SCHOOLBOOTH_Rate_Limiter {
+    const CODE_ATTEMPT_KEY = 'schoolbooth_code_attempt_%s_%s'; // code, ip
+    const FORM_ATTEMPT_KEY = 'schoolbooth_form_attempt_%s_%s';  // code, ip
+    const CODE_LOCKOUT_KEY = 'schoolbooth_code_lockout_%s';     // code
     
     // Configuration
     private $max_attempts = 5;           // Max attempts before lockout
@@ -26,9 +26,9 @@ class PTASB_Rate_Limiter {
     
     private function __construct() {
         // Allow filtering configuration
-        $this->max_attempts = apply_filters('ptasb_rate_limit_max_attempts', $this->max_attempts);
-        $this->attempt_window = apply_filters('ptasb_rate_limit_window', $this->attempt_window);
-        $this->lockout_duration = apply_filters('ptasb_rate_limit_lockout', $this->lockout_duration);
+        $this->max_attempts = apply_filters('schoolbooth_rate_limit_max_attempts', $this->max_attempts);
+        $this->attempt_window = apply_filters('schoolbooth_rate_limit_window', $this->attempt_window);
+        $this->lockout_duration = apply_filters('schoolbooth_rate_limit_lockout', $this->lockout_duration);
     }
     
     /**
@@ -42,7 +42,7 @@ class PTASB_Rate_Limiter {
         if ($this->is_code_locked($code)) {
             return new WP_Error(
                 'rate_limit_lockout',
-                __('This access code has been temporarily locked due to too many failed attempts. Please try again later.', 'pta-schoolbooth'),
+                __('This access code has been temporarily locked due to too many failed attempts. Please try again later.', 'schoolbooth'),
                 ['retry_after' => $this->lockout_duration]
             );
         }
@@ -98,7 +98,7 @@ class PTASB_Rate_Limiter {
             
             return new WP_Error(
                 'form_rate_limit',
-                __('You can submit the permissions form once per hour. Please try again later.', 'pta-schoolbooth'),
+                __('You can submit the permissions form once per hour. Please try again later.', 'schoolbooth'),
                 ['retry_after' => $retry_after]
             );
         }
@@ -171,4 +171,6 @@ class PTASB_Rate_Limiter {
         return $ip ?: 'unknown';
     }
 }
+
+
 

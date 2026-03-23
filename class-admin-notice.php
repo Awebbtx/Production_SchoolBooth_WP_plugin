@@ -1,5 +1,5 @@
-<?php
-class PTASB_Admin_Notice {
+﻿<?php
+class SCHOOLBOOTH_Admin_Notice {
     public static function init() {
         add_action('admin_notices', [self::class, 'show_secret_notice']);
     }
@@ -7,8 +7,8 @@ class PTASB_Admin_Notice {
     public static function show_secret_notice() {
         if (!current_user_can('manage_options')) return;
         
-        if (defined('PTASB_SHARED_SECRET')) {
-            $secret = PTASB_SHARED_SECRET;
+        if (defined('SCHOOLBOOTH_SHARED_SECRET')) {
+            $secret = SCHOOLBOOTH_SHARED_SECRET;
             $partial_secret = substr($secret, 0, 4) . str_repeat('*', strlen($secret) - 4);
             
             echo '<div class="notice notice-info">';
@@ -19,3 +19,4 @@ class PTASB_Admin_Notice {
         }
     }
 }
+

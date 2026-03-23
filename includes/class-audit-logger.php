@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Audit Logger
  * 
@@ -6,8 +6,8 @@
  * Uses Custom Post Type to ensure no editing/deletion of audit records.
  * Includes cryptographic digest chaining for tamper detection.
  */
-class PTASB_Audit_Logger {
-    const CPT = 'ptasb_audit_log';
+class SCHOOLBOOTH_Audit_Logger {
+    const CPT = 'schoolbooth_audit_log';
     const INTEGRITY_KEY = '_event_integrity_digest';
     
     private static $instance;
@@ -29,7 +29,7 @@ class PTASB_Audit_Logger {
      */
     public function register_cpt() {
         register_post_type(self::CPT, [
-            'label'               => __('Audit Log', 'pta-schoolbooth'),
+            'label'               => __('Audit Log', 'schoolbooth'),
             'public'              => false,
             'show_ui'             => false,
             'show_in_rest'        => false,
@@ -38,13 +38,13 @@ class PTASB_Audit_Logger {
             'rewrite'             => false,
             'capability_type'     => 'post',
             'capabilities'        => [
-                'create_posts'   => 'ptasb_audit_create',
-                'delete_posts'   => 'ptasb_audit_delete',
-                'delete_post'    => 'ptasb_audit_delete_post',
-                'delete_others_posts' => 'ptasb_audit_delete_others',
-                'edit_posts'     => 'ptasb_audit_edit',
-                'edit_post'      => 'ptasb_audit_edit_post',
-                'edit_others_posts' => 'ptasb_audit_edit_others',
+                'create_posts'   => 'schoolbooth_audit_create',
+                'delete_posts'   => 'schoolbooth_audit_delete',
+                'delete_post'    => 'schoolbooth_audit_delete_post',
+                'delete_others_posts' => 'schoolbooth_audit_delete_others',
+                'edit_posts'     => 'schoolbooth_audit_edit',
+                'edit_post'      => 'schoolbooth_audit_edit_post',
+                'edit_others_posts' => 'schoolbooth_audit_edit_others',
             ],
             'map_meta_cap'        => true,
         ]);
@@ -66,7 +66,7 @@ class PTASB_Audit_Logger {
      */
     public function deny_audit_caps($caps, $cap, $user_id) {
         // Only deny edit/delete caps for audit posts in admin context
-        if (in_array($cap, ['ptasb_audit_edit', 'ptasb_audit_edit_post', 'ptasb_audit_delete', 'ptasb_audit_delete_post'])) {
+        if (in_array($cap, ['schoolbooth_audit_edit', 'schoolbooth_audit_edit_post', 'schoolbooth_audit_delete', 'schoolbooth_audit_delete_post'])) {
             if (isset($_GET['post']) || isset($_POST['post_ID'])) {
                 $post_id = isset($_GET['post']) ? (int)$_GET['post'] : (int)$_POST['post_ID'];
                 $post = get_post($post_id);
@@ -85,7 +85,7 @@ class PTASB_Audit_Logger {
         global $post;
         if ($post && $post->post_type === self::CPT) {
             echo '<div class="notice notice-warning"><p>';
-            esc_html_e('Audit log entries are immutable and cannot be edited or deleted.', 'pta-schoolbooth');
+            esc_html_e('Audit log entries are immutable and cannot be edited or deleted.', 'schoolbooth');
             echo '</p></div>';
         }
     }
@@ -155,7 +155,7 @@ class PTASB_Audit_Logger {
             'photo_id'     => $event_record['photo_id'],
             'data'         => $event_record['data'],
             'prev_digest'  => $event_record['prev_digest'],
-        ]) . PTASB_SHARED_SECRET;
+        ]) . SCHOOLBOOTH_SHARED_SECRET;
         
         return hash('sha256', $to_hash);
     }
@@ -173,10 +173,10 @@ class PTASB_Audit_Logger {
         ]);
         
         if (empty($last_post)) {
-            return hash('sha256', PTASB_SHARED_SECRET);
+            return hash('sha256', SCHOOLBOOTH_SHARED_SECRET);
         }
         
-        return get_post_meta($last_post[0], self::INTEGRITY_KEY, true) ?: hash('sha256', PTASB_SHARED_SECRET);
+        return get_post_meta($last_post[0], self::INTEGRITY_KEY, true) ?: hash('sha256', SCHOOLBOOTH_SHARED_SECRET);
     }
     
     /**
@@ -208,7 +208,7 @@ class PTASB_Audit_Logger {
      */
     public function get_events($photo_id = null, $event_type = null, $start_date = null, $end_date = null) {
         // Check capabilities
-        if (!current_user_can('manage_options') && !current_user_can('ptasb_audit_read')) {
+        if (!current_user_can('manage_options') && !current_user_can('schoolbooth_audit_read')) {
             return new WP_Error('insufficient_caps', 'You do not have permission to view audit logs');
         }
         
@@ -267,7 +267,7 @@ class PTASB_Audit_Logger {
             'order'          => 'ASC',
         ]);
         
-        $prev_digest = hash('sha256', PTASB_SHARED_SECRET);
+        $prev_digest = hash('sha256', SCHOOLBOOTH_SHARED_SECRET);
         $results = [];
         
         foreach ($posts as $post) {
@@ -288,4 +288,6 @@ class PTASB_Audit_Logger {
         return $results;
     }
 }
+
+
 
