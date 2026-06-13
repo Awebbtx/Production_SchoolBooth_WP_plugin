@@ -44,6 +44,7 @@ class SCHOOLBOOTH_Download_Handler {
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('schoolbooth_ajax'),
             'delete_confirm' => __('Are you sure you want to delete this photo?', 'schoolbooth'),
+            'delete_all_confirm' => __('Delete ALL photos for this access code? This cannot be undone.', 'schoolbooth'),
             'no_photos' => __('No photos available', 'schoolbooth'),
             'delete_error' => __('Failed to delete photo', 'schoolbooth')
         ]);

@@ -109,5 +109,121 @@
             $btn.data('deleting', false).prop('disabled', false);
         });
     });
+
+    // Download ALL photos in the visible session by triggering each
+    // per-photo download URL sequentially. Browsers normally rate-limit
+    // simultaneous downloads, so we space the clicks ~800ms apart.
+    $(document)
+        .off('click.ptasbDownloadAll', '.download-all')
+        .on('click.ptasbDownloadAll', '.download-all', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.data('downloading')) {
+            return;
+        }
+        var $links = $('.photo-card .download-btn');
+        if (!$links.length) {
+            return;
+        }
+        $btn.data('downloading', true).prop('disabled', true);
+        var originalText = $btn.text();
+        var total = $links.length;
+        var done = 0;
+        $links.each(function(idx) {
+            var href = $(this).attr('href');
+            if (!href) {
+                return;
+            }
+            setTimeout(function() {
+                var a = document.createElement('a');
+                a.href = href;
+                // download attr is best-effort; if cross-origin the server's
+                // Content-Disposition still drives the save.
+                a.setAttribute('download', '');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                done++;
+                $btn.text(originalText + ' (' + done + '/' + total + ')');
+                if (done >= total) {
+                    setTimeout(function() {
+                        $btn.text(originalText)
+                            .prop('disabled', false)
+                            .data('downloading', false);
+                        // Reload after a moment so download-remaining counters refresh.
+                        setTimeout(function() { window.location.reload(); }, 1500);
+                    }, 600);
+                }
+            }, idx * 800);
+        });
+    });
+
+    // Delete ALL photos in the visible session by calling the existing
+    // single-photo endpoint for each card. Requires manage_options.
+    $(document)
+        .off('click.ptasbDeleteAll', '.delete-all')
+        .on('click.ptasbDeleteAll', '.delete-all', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.data('deleting')) {
+            return;
+        }
+        var $cards = $('.photo-card');
+        if (!$cards.length) {
+            return;
+        }
+        var confirmMsg = (schoolbooth_vars && schoolbooth_vars.delete_all_confirm)
+            ? schoolbooth_vars.delete_all_confirm
+            : 'Delete ALL photos for this access code? This cannot be undone.';
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        $btn.data('deleting', true).prop('disabled', true);
+        var originalText = $btn.text();
+        var total = $cards.length;
+        var done = 0;
+        var failures = 0;
+        $cards.each(function() {
+            var $card = $(this);
+            var $del = $card.find('.delete-btn').first();
+            if (!$del.length) {
+                done++;
+                return;
+            }
+            $.post(schoolbooth_vars.ajaxurl, {
+                action: 'schoolbooth_delete_photo',
+                file: $del.data('file'),
+                code: $del.data('code'),
+                delete_token: $del.data('delete-token'),
+                delete_expires: $del.data('delete-expires'),
+                security: schoolbooth_vars.nonce
+            }, function(response) {
+                if (response.success) {
+                    $card.fadeOut(200, function() { $(this).remove(); });
+                } else {
+                    failures++;
+                }
+            }).fail(function() {
+                failures++;
+            }).always(function() {
+                done++;
+                $btn.text(originalText + ' (' + done + '/' + total + ')');
+                if (done >= total) {
+                    setTimeout(function() {
+                        $btn.text(originalText)
+                            .prop('disabled', false)
+                            .data('deleting', false);
+                        if (failures > 0) {
+                            alert(failures + ' photo(s) could not be deleted.');
+                        }
+                        if ($('.photo-card').length === 0) {
+                            $('.photo-grid').after('<p class="no-photos">' + schoolbooth_vars.no_photos + '</p>');
+                            $('.photo-actions').hide();
+                        }
+                    }, 400);
+                }
+            });
+        });
+    });
 });
 
