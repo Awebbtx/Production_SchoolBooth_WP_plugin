@@ -7,7 +7,12 @@
  * Includes cryptographic digest chaining for tamper detection.
  */
 class SCHOOLBOOTH_Audit_Logger {
-    const CPT = 'schoolbooth_audit_log';
+    // NOTE: WordPress enforces a hard 20-character maximum on post_type slugs
+    // (see wpdb::process_field() / register_post_type()). The original slug
+    // 'schoolbooth_audit_log' is 21 characters and silently failed
+    // wp_insert_post() validation on every call. Slug must remain <= 20 chars.
+    const CPT = 'sb_audit_log';
+    const LEGACY_CPT = 'schoolbooth_audit_log';
     const INTEGRITY_KEY = '_event_integrity_digest';
     
     private static $instance;
@@ -32,6 +37,42 @@ class SCHOOLBOOTH_Audit_Logger {
             add_action('init', [$this, 'register_cpt'], 0);
             add_action('init', [$this, 'lock_audit_posts'], 0);
         }
+
+        // One-time migration: rename rows from the legacy >20 char post_type
+        // ('schoolbooth_audit_log') to the current short slug. Idempotent.
+        $this->maybe_migrate_legacy_post_type();
+    }
+
+    /**
+     * Migrate rows inserted under the original 21-character post_type slug
+     * (which silently failed wp_insert_post()'s post_type length check) to
+     * the current short slug. Runs at most once per site.
+     */
+    private function maybe_migrate_legacy_post_type() {
+        $flag = 'schoolbooth_audit_cpt_migrated_v1';
+        if (get_option($flag)) {
+            return;
+        }
+        global $wpdb;
+        if (!isset($wpdb)) {
+            return;
+        }
+        $updated = $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->posts} SET post_type = %s WHERE post_type = %s",
+            self::CPT,
+            self::LEGACY_CPT
+        ));
+        if ($updated === false) {
+            error_log('[schoolbooth audit] legacy CPT migration failed: ' . $wpdb->last_error);
+            return;
+        }
+        update_option($flag, [
+            'migrated_rows' => (int) $updated,
+            'migrated_at'   => gmdate('c'),
+            'from'          => self::LEGACY_CPT,
+            'to'            => self::CPT,
+        ], false);
+        error_log('[schoolbooth audit] migrated ' . (int) $updated . ' legacy audit rows to ' . self::CPT);
     }
     
     /**
