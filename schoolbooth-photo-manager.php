@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Schoolbooth Photo Manager
  * Description: Secure photo downloads with access codes and portal interface
- * Version: 3.2.5
+ * Version: 3.2.6
  * Author: IKAP Systems
  * Text Domain: schoolbooth
  */
@@ -31,7 +31,7 @@ if (!function_exists('schoolbooth_normalize_access_code')) {
 // Production safety: rely on WordPress defaults for application password availability.
 
 // Plugin Setup
-define('SCHOOLBOOTH_DOWNLOAD_VERSION', '3.2.5');
+define('SCHOOLBOOTH_DOWNLOAD_VERSION', '3.2.6');
 define('SCHOOLBOOTH_DOWNLOAD_PATH', plugin_dir_path(__FILE__));
 define('SCHOOLBOOTH_DOWNLOAD_URL', plugin_dir_url(__FILE__));
 

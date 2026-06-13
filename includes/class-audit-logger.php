@@ -20,8 +20,18 @@ class SCHOOLBOOTH_Audit_Logger {
     }
     
     private function __construct() {
-        add_action('init', [$this, 'register_cpt']);
-        add_action('init', [$this, 'lock_audit_posts']);
+        // If 'init' has already fired (e.g. we are being constructed from another
+        // 'init' callback), register the CPT immediately so subsequent
+        // wp_insert_post() calls in the same request will work. Otherwise hook
+        // at priority 0 so the CPT is registered before any other 'init' code
+        // tries to log an event.
+        if (did_action('init')) {
+            $this->register_cpt();
+            $this->lock_audit_posts();
+        } else {
+            add_action('init', [$this, 'register_cpt'], 0);
+            add_action('init', [$this, 'lock_audit_posts'], 0);
+        }
     }
     
     /**
@@ -126,6 +136,14 @@ class SCHOOLBOOTH_Audit_Logger {
         $event_record['prev_digest'] = $this->get_last_digest();
         $event_record['digest'] = $this->compute_digest($event_record);
         
+        // Make sure the CPT is registered before we try to insert into it.
+        // Belt-and-suspenders: if something tries to log before our 'init'
+        // callback has fired (or in a CLI / REST context that bypassed init),
+        // wp_insert_post() with an unregistered post type silently returns 0.
+        if (!post_type_exists(self::CPT)) {
+            $this->register_cpt();
+        }
+
         // Create post for this audit event
         $post_id = wp_insert_post([
             'post_type'    => self::CPT,
@@ -135,7 +153,13 @@ class SCHOOLBOOTH_Audit_Logger {
         ], true);
         
         if (is_wp_error($post_id)) {
+            error_log('[schoolbooth audit] wp_insert_post failed for ' . $event_type . ': ' . $post_id->get_error_message());
             return $post_id;
+        }
+
+        if (!$post_id) {
+            error_log('[schoolbooth audit] wp_insert_post returned 0 for ' . $event_type . ' (CPT registered: ' . (post_type_exists(self::CPT) ? 'yes' : 'no') . ')');
+            return new WP_Error('insert_failed', 'wp_insert_post returned 0');
         }
         
         // Store digest as post meta for integrity verification
