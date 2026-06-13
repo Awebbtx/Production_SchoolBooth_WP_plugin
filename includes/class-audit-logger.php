@@ -135,7 +135,12 @@ class SCHOOLBOOTH_Audit_Logger {
         // Add integrity digest (hash of previous entry + current data)
         $event_record['prev_digest'] = $this->get_last_digest();
         $event_record['digest'] = $this->compute_digest($event_record);
-        
+
+        // Always write a fallback file copy first, before doing anything else
+        // that could fail. This guarantees a visible record of every event
+        // even if the database insert fails for any reason.
+        $this->write_fallback_log($event_record);
+
         // Make sure the CPT is registered before we try to insert into it.
         // Belt-and-suspenders: if something tries to log before our 'init'
         // callback has fired (or in a CLI / REST context that bypassed init),
@@ -153,14 +158,20 @@ class SCHOOLBOOTH_Audit_Logger {
         ], true);
         
         if (is_wp_error($post_id)) {
-            error_log('[schoolbooth audit] wp_insert_post failed for ' . $event_type . ': ' . $post_id->get_error_message());
+            $msg = '[schoolbooth audit] wp_insert_post failed for ' . $event_type . ': ' . $post_id->get_error_message();
+            error_log($msg);
+            $this->write_fallback_log(['_error' => $msg]);
             return $post_id;
         }
 
         if (!$post_id) {
-            error_log('[schoolbooth audit] wp_insert_post returned 0 for ' . $event_type . ' (CPT registered: ' . (post_type_exists(self::CPT) ? 'yes' : 'no') . ')');
+            $msg = '[schoolbooth audit] wp_insert_post returned 0 for ' . $event_type . ' (CPT registered: ' . (post_type_exists(self::CPT) ? 'yes' : 'no') . ')';
+            error_log($msg);
+            $this->write_fallback_log(['_error' => $msg]);
             return new WP_Error('insert_failed', 'wp_insert_post returned 0');
         }
+
+        $this->write_fallback_log(['_inserted_post_id' => $post_id, 'event_type' => $event_type]);
         
         // Store digest as post meta for integrity verification
         update_post_meta($post_id, self::INTEGRITY_KEY, $event_record['digest']);
@@ -278,6 +289,42 @@ class SCHOOLBOOTH_Audit_Logger {
         }
         
         return $events;
+    }
+
+    /**
+     * Append a JSON line to a fallback log file in the uploads dir.
+     *
+     * This is independent of the database / CPT, so it captures evidence
+     * even if wp_insert_post() fails or the CPT isn't registered yet.
+     */
+    private function write_fallback_log($entry) {
+        $upload_dir = wp_upload_dir();
+        if (empty($upload_dir['basedir'])) {
+            return;
+        }
+        $dir = trailingslashit($upload_dir['basedir']) . 'schoolbooth/data';
+        if (!is_dir($dir)) {
+            wp_mkdir_p($dir);
+        }
+        $line = wp_json_encode(array_merge(
+            ['_logged_at' => gmdate('c')],
+            (array) $entry
+        ));
+        if ($line === false) {
+            return;
+        }
+        @file_put_contents($dir . '/audit-fallback.log', $line . "\n", FILE_APPEND | LOCK_EX);
+    }
+
+    /**
+     * Return path to the fallback log file (may not exist yet).
+     */
+    public function get_fallback_log_path() {
+        $upload_dir = wp_upload_dir();
+        if (empty($upload_dir['basedir'])) {
+            return '';
+        }
+        return trailingslashit($upload_dir['basedir']) . 'schoolbooth/data/audit-fallback.log';
     }
     
     /**

@@ -59,6 +59,9 @@ class SCHOOLBOOTH_Admin_Audit_Viewer {
                 <a href="#integrity" class="nav-tab" data-tab="integrity">
                     <?php _e('Chain Integrity', 'schoolbooth'); ?>
                 </a>
+                <a href="#fallback" class="nav-tab" data-tab="fallback">
+                    <?php _e('Diagnostic Log', 'schoolbooth'); ?>
+                </a>
             </div>
             
             <div id="events" class="tab-content">
@@ -74,6 +77,11 @@ class SCHOOLBOOTH_Admin_Audit_Viewer {
             <div id="integrity" class="tab-content" style="display:none;">
                 <h2><?php _e('Chain Integrity Verification', 'schoolbooth'); ?></h2>
                 <?php $this->render_integrity_check(); ?>
+            </div>
+
+            <div id="fallback" class="tab-content" style="display:none;">
+                <h2><?php _e('Diagnostic Log (last 200 lines)', 'schoolbooth'); ?></h2>
+                <?php $this->render_fallback_log(); ?>
             </div>
         </div>
         
@@ -528,6 +536,38 @@ class SCHOOLBOOTH_Admin_Audit_Viewer {
      */
     public function register_settings() {
         // Future: add settings page here
+    }
+
+    /**
+     * Render the diagnostic / fallback log file (last 200 lines).
+     */
+    private function render_fallback_log() {
+        $audit = SCHOOLBOOTH_Audit_Logger::init();
+        $path = $audit->get_fallback_log_path();
+
+        echo '<div class="info-box">';
+        echo '<p>' . esc_html__('Every audit event is also written to a file on disk before it is inserted into the database. If the database insert fails, the file copy still records what happened. This view shows the last 200 lines.', 'schoolbooth') . '</p>';
+        echo '<p><strong>' . esc_html__('File path:', 'schoolbooth') . '</strong> <code>' . esc_html($path) . '</code></p>';
+        echo '</div>';
+
+        if ($path === '' || !file_exists($path)) {
+            echo '<p>' . esc_html__('Diagnostic log file does not exist yet. Trigger an upload, consent submission, or download and refresh this page.', 'schoolbooth') . '</p>';
+            return;
+        }
+
+        $size = @filesize($path);
+        echo '<p>' . sprintf(esc_html__('File size: %s bytes', 'schoolbooth'), esc_html(number_format((int)$size))) . '</p>';
+
+        $contents = @file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (!is_array($contents) || empty($contents)) {
+            echo '<p>' . esc_html__('File is empty or unreadable.', 'schoolbooth') . '</p>';
+            return;
+        }
+
+        $tail = array_slice($contents, -200);
+        echo '<pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;overflow:auto;max-height:600px;font-size:12px;line-height:1.4;">';
+        echo esc_html(implode("\n", $tail));
+        echo '</pre>';
     }
 }
 
