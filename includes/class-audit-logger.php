@@ -177,11 +177,6 @@ class SCHOOLBOOTH_Audit_Logger {
         $event_record['prev_digest'] = $this->get_last_digest();
         $event_record['digest'] = $this->compute_digest($event_record);
 
-        // Always write a fallback file copy first, before doing anything else
-        // that could fail. This guarantees a visible record of every event
-        // even if the database insert fails for any reason.
-        $this->write_fallback_log($event_record);
-
         // Make sure the CPT is registered before we try to insert into it.
         // Belt-and-suspenders: if something tries to log before our 'init'
         // callback has fired (or in a CLI / REST context that bypassed init),
@@ -209,11 +204,6 @@ class SCHOOLBOOTH_Audit_Logger {
                 : 'wp_insert_post returned 0';
             $db_err = isset($wpdb->last_error) ? $wpdb->last_error : '';
             error_log('[schoolbooth audit] wp_insert_post failed for ' . $event_type . ': ' . $reason . ($db_err ? ' | wpdb: ' . $db_err : ''));
-            $this->write_fallback_log([
-                '_wp_insert_post_error' => $reason,
-                '_wpdb_last_error'      => $db_err,
-                '_falling_back_to'      => 'direct wpdb insert',
-            ]);
 
             // Direct insert bypasses ALL filters. We sanitize the inputs
             // ourselves -- post_content is JSON we just generated.
@@ -257,25 +247,16 @@ class SCHOOLBOOTH_Audit_Logger {
             if ($insert_ok === false) {
                 $db_err2 = isset($wpdb->last_error) ? $wpdb->last_error : '(no wpdb error)';
                 error_log('[schoolbooth audit] direct wpdb insert ALSO failed for ' . $event_type . ': ' . $db_err2);
+                // Persist as last-resort evidence that something went wrong --
+                // the row never landed in the database.
                 $this->write_fallback_log([
-                    '_direct_wpdb_error' => $db_err2,
-                    'event_type'         => $event_type,
+                    '_unrecoverable_error' => $db_err2,
+                    'event'                => $event_record,
                 ]);
                 return new WP_Error('audit_insert_failed', 'Could not insert audit row: ' . $db_err2);
             }
 
             $post_id = (int) $wpdb->insert_id;
-            $this->write_fallback_log([
-                '_inserted_post_id'    => $post_id,
-                '_via'                 => 'direct_wpdb',
-                'event_type'           => $event_type,
-            ]);
-        } else {
-            $this->write_fallback_log([
-                '_inserted_post_id' => $post_id,
-                '_via'              => 'wp_insert_post',
-                'event_type'        => $event_type,
-            ]);
         }
         
         // Store digest as post meta for integrity verification
