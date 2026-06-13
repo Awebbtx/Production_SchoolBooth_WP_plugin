@@ -314,7 +314,16 @@ class SCHOOLBOOTH_Admin_Audit_Viewer {
                     <?php echo $success ? esc_html__('Success', 'schoolbooth') : esc_html__('Failed', 'schoolbooth'); ?>
                 </span>
             </td>
-            <td><?php echo esc_html($this->summarize_event($event)); ?></td>
+            <td>
+                <?php
+                $sid = isset($data['session_id']) ? (string) $data['session_id'] : '';
+                if ($sid !== '') {
+                    $sid_url = esc_url(add_query_arg(['page' => 'schoolbooth-audit-log', 's' => $sid], admin_url('admin.php')));
+                    echo '<a class="audit-session-chip" href="' . $sid_url . '" title="' . esc_attr__('Filter by this session', 'schoolbooth') . '">' . esc_html($sid) . '</a><br />';
+                }
+                echo esc_html($this->summarize_event($event));
+                ?>
+            </td>
         </tr>
         <tr id="<?php echo esc_attr($detail_id); ?>" class="audit-detail" style="display:none;">
             <td></td>
@@ -489,7 +498,7 @@ class SCHOOLBOOTH_Admin_Audit_Viewer {
         fwrite($out, "\xEF\xBB\xBF");
         fputcsv($out, [
             'post_id','timestamp_utc','event_type','status','user_id','ip_address',
-            'file','access_code','consent_name','consent_email','email_domain',
+            'file','access_code','session_id','consent_name','consent_email','email_domain',
             'reason','source','downloads_used','digest','prev_digest','data_json',
         ]);
         foreach ($filtered as $e) {
@@ -503,6 +512,7 @@ class SCHOOLBOOTH_Admin_Audit_Viewer {
                 isset($e['ip_address'])  ? $e['ip_address']  : '',
                 isset($d['file']) ? $d['file'] : (isset($d['filename']) ? $d['filename'] : ''),
                 isset($d['code']) ? $d['code'] : (isset($d['access_code']) ? $d['access_code'] : ''),
+                isset($d['session_id'])     ? $d['session_id']     : '',
                 isset($d['consent_name'])   ? $d['consent_name']   : '',
                 isset($d['consent_email'])  ? $d['consent_email']  : '',
                 isset($d['email_domain'])   ? $d['email_domain']   : '',
@@ -552,6 +562,12 @@ class SCHOOLBOOTH_Admin_Audit_Viewer {
             .failure { color: #721c24; font-weight: 600; }
             .integrity-valid   { color: #155724; font-weight: 600; }
             .integrity-invalid { color: #721c24; font-weight: 600; }
+            .audit-session-chip {
+                display: inline-block; margin-bottom: 4px; padding: 1px 6px;
+                background: #2271b1; color: #fff !important; border-radius: 10px;
+                font-size: 11px; font-family: monospace; text-decoration: none;
+            }
+            .audit-session-chip:hover { background: #135e96; }
             .timeline { padding: 12px 0; }
             .timeline-item { margin-bottom: 12px; padding: 12px; border-left: 3px solid #2271b1; background: #f6f7f7; }
             .timeline-item.success { border-left-color: #155724; }

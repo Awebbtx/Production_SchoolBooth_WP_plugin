@@ -76,9 +76,12 @@ class SCHOOLBOOTH_Download_Handler {
 
         if (!$this->validate_hash($file, $code, $received_hash)) {
             // Log failed validation attempt
-            $this->log_download_attempt($file, $code, $this->lookup_session_id($file), [
-                'success' => false,
-                'reason'  => 'invalid_hash',
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
+            $audit->log_event('download_attempt', [
+                'file'     => $file,
+                'code'     => $code,
+                'success'  => false,
+                'reason'   => 'invalid_hash',
             ]);
             
             wp_die(__('Invalid security token', 'schoolbooth'), 403);
@@ -88,9 +91,12 @@ class SCHOOLBOOTH_Download_Handler {
         $rate_limiter = SCHOOLBOOTH_Rate_Limiter::init();
         $rate_check = $rate_limiter->check_access_code_attempt($code);
         if (is_wp_error($rate_check)) {
-            $this->log_download_attempt($file, $code, $this->lookup_session_id($file), [
-                'success' => false,
-                'reason'  => 'rate_limited',
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
+            $audit->log_event('download_attempt', [
+                'file'     => $file,
+                'code'     => $code,
+                'success'  => false,
+                'reason'   => 'rate_limited',
             ]);
             
             wp_die(__('Too many failed attempts. Please try again later.', 'schoolbooth'), 429);
@@ -100,9 +106,12 @@ class SCHOOLBOOTH_Download_Handler {
         // the download portal (where the form is rendered) rather than dying
         // with an opaque error -- this is the flow QR codes need.
         if (!$is_app_view && !SCHOOLBOOTH_Permissions_Form_Handler::has_completed_form($code)) {
-            $this->log_download_attempt($file, $code, $this->lookup_session_id($file), [
-                'success' => false,
-                'reason'  => 'form_not_completed',
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
+            $audit->log_event('download_attempt', [
+                'file'     => $file,
+                'code'     => $code,
+                'success'  => false,
+                'reason'   => 'form_not_completed',
             ]);
 
             $this->redirect_to_portal($file, $code);
@@ -268,11 +277,13 @@ class SCHOOLBOOTH_Download_Handler {
 
         $codes = $this->load_codes();
         $stored_code = isset($codes[$file]['code']) ? schoolbooth_normalize_access_code($codes[$file]['code']) : '';
-        $session_id = isset($codes[$file]['session_id']) ? (string) $codes[$file]['session_id'] : '';
         if (!isset($codes[$file]) || $stored_code !== $code) {
-            $this->log_download_attempt($file, $code, $session_id, [
-                'success' => false,
-                'reason'  => 'invalid_code',
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
+            $audit->log_event('download_attempt', [
+                'file'     => $file,
+                'code'     => $code,
+                'success'  => false,
+                'reason'   => 'invalid_code',
             ]);
             
             wp_die(__('Invalid access code', 'schoolbooth'), 403);
@@ -280,9 +291,12 @@ class SCHOOLBOOTH_Download_Handler {
 
         $record = $codes[$file];
         if ($this->is_record_expired($record)) {
-            $this->log_download_attempt($file, $code, $session_id, [
-                'success' => false,
-                'reason'  => 'expired',
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
+            $audit->log_event('download_attempt', [
+                'file'     => $file,
+                'code'     => $code,
+                'success'  => false,
+                'reason'   => 'expired',
             ]);
             
             wp_die(__('This download link has expired', 'schoolbooth'), 410);
@@ -291,9 +305,12 @@ class SCHOOLBOOTH_Download_Handler {
         $download_limit = (int) (isset($this->options['download_limit']) ? $this->options['download_limit'] : 3);
         $downloads = (int) (isset($record['downloads']) ? $record['downloads'] : 0);
         if ($downloads >= $download_limit) {
-            $this->log_download_attempt($file, $code, $session_id, [
-                'success' => false,
-                'reason'  => 'download_limit_exceeded',
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
+            $audit->log_event('download_attempt', [
+                'file'     => $file,
+                'code'     => $code,
+                'success'  => false,
+                'reason'   => 'download_limit_exceeded',
             ]);
             
             wp_die(__('Download limit reached', 'schoolbooth'), 403);
@@ -301,9 +318,12 @@ class SCHOOLBOOTH_Download_Handler {
 
         $file_path = $this->resolve_photo_path($file);
         if ($file_path === '' || !is_file($file_path)) {
-            $this->log_download_attempt($file, $code, $session_id, [
-                'success' => false,
-                'reason'  => 'file_not_found',
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
+            $audit->log_event('download_attempt', [
+                'file'     => $file,
+                'code'     => $code,
+                'success'  => false,
+                'reason'   => 'file_not_found',
             ]);
             
             wp_die(__('File not found', 'schoolbooth'), 404);
@@ -312,17 +332,23 @@ class SCHOOLBOOTH_Download_Handler {
         // Update download count (atomic operation with transaction)
         $update_result = $this->update_download_count($file, $code);
         if (!$update_result) {
-            $this->log_download_attempt($file, $code, $session_id, [
-                'success' => false,
-                'reason'  => 'update_count_failed',
+            $audit = SCHOOLBOOTH_Audit_Logger::init();
+            $audit->log_event('download_attempt', [
+                'file'     => $file,
+                'code'     => $code,
+                'success'  => false,
+                'reason'   => 'update_count_failed',
             ]);
             
             wp_die(__('Unable to authorize download', 'schoolbooth'), 403);
         }
 
         // Log successful download
-        $this->log_download_attempt($file, $code, $session_id, [
-            'success'        => true,
+        $audit = SCHOOLBOOTH_Audit_Logger::init();
+        $audit->log_event('download_attempt', [
+            'file'     => $file,
+            'code'     => $code,
+            'success'  => true,
             'downloads_used' => $downloads + 1,
         ]);
         
@@ -530,52 +556,6 @@ class SCHOOLBOOTH_Download_Handler {
         $relative_path = str_replace('\\', '/', $relative_path);
         return $upload_dir['baseurl'] . '/' . $relative_path;
     }
-
-    /**
-     * Look up the session_id stored alongside a given file in codes.json.
-     * Returns '' when none is set or the file is not known.
-     */
-    protected function lookup_session_id($file) {
-        $codes = $this->load_codes();
-        if (isset($codes[$file]['session_id'])) {
-            return (string) $codes[$file]['session_id'];
-        }
-        return '';
-    }
-
-    /**
-     * Look up the session_id associated with any photo carrying the given
-     * access code. Returns '' when no record has a session_id.
-     */
-    public function lookup_session_id_for_code($code) {
-        $code = schoolbooth_normalize_access_code((string) $code);
-        if ($code === '') {
-            return '';
-        }
-        foreach ($this->load_codes() as $record) {
-            if (!isset($record['code']) || !isset($record['session_id'])) {
-                continue;
-            }
-            if (schoolbooth_normalize_access_code($record['code']) === $code) {
-                return (string) $record['session_id'];
-            }
-        }
-        return '';
-    }
-
-    /**
-     * Log a download_attempt audit event with session_id auto-injected.
-     */
-    private function log_download_attempt($file, $code, $session_id, array $extra) {
-        $data = array_merge([
-            'file' => $file,
-            'code' => $code,
-        ], $extra);
-        if ($session_id !== '') {
-            $data['session_id'] = $session_id;
-        }
-        SCHOOLBOOTH_Audit_Logger::init()->log_event('download_attempt', $data);
-    }
     
     protected function generate_thumbnail($file_path) {
         return $this->generate_file_url($file_path);
@@ -608,16 +588,11 @@ class SCHOOLBOOTH_Download_Handler {
             
             // Log the manual deletion
             $audit = SCHOOLBOOTH_Audit_Logger::init();
-            $manual_delete_data = [
+            $audit->log_event('manual_delete', [
                 'file'     => $file,
                 'code'     => $code,
                 'deleted_by' => 'user',
-            ];
-            $sid = isset($codes[$file]['session_id']) ? (string) $codes[$file]['session_id'] : '';
-            if ($sid !== '') {
-                $manual_delete_data['session_id'] = $sid;
-            }
-            $audit->log_event('manual_delete', $manual_delete_data);
+            ]);
             
             unset($codes[$file]);
             return file_put_contents($codes_file, json_encode($codes, JSON_PRETTY_PRINT), LOCK_EX) !== false;

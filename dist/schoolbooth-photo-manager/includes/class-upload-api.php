@@ -136,7 +136,6 @@ class SCHOOLBOOTH_Upload_API {
         $access_code_raw = isset($payload['access_code']) ? sanitize_text_field($payload['access_code']) : '';
         $access_code = schoolbooth_normalize_access_code($access_code_raw);
         $image_b64 = isset($payload['image_b64']) ? (string) $payload['image_b64'] : '';
-        $session_id = isset($payload['session_id']) ? $this->sanitize_session_id($payload['session_id']) : '';
 
         if ($file_rel_path === '' || $access_code === '' || $image_b64 === '') {
             return new WP_Error('schoolbooth_bad_request', __('Missing required upload fields', 'schoolbooth'), ['status' => 400]);
@@ -176,23 +175,22 @@ class SCHOOLBOOTH_Upload_API {
             return new WP_Error('schoolbooth_write_failed', __('Failed to write uploaded image', 'schoolbooth'), ['status' => 500]);
         }
 
-        $save_result = $this->save_access_code_record($normalized_rel_path, $access_code, $session_id);
+        $save_result = $this->save_access_code_record($normalized_rel_path, $access_code);
         if (is_wp_error($save_result)) {
             return $save_result;
         }
 
-        $audit_data_base = [
+        $audit = SCHOOLBOOTH_Audit_Logger::init();
+        $audit->log_event('upload', [
             'file' => $normalized_rel_path,
             'code' => $access_code,
             'source' => 'api_ingest',
-        ];
-        if ($session_id !== '') {
-            $audit_data_base['session_id'] = $session_id;
-        }
-
-        $audit = SCHOOLBOOTH_Audit_Logger::init();
-        $audit->log_event('upload', $audit_data_base);
-        $audit->log_event('access_code_gen', $audit_data_base);
+        ]);
+        $audit->log_event('access_code_gen', [
+            'file' => $normalized_rel_path,
+            'code' => $access_code,
+            'source' => 'api_ingest',
+        ]);
 
         $download_url = add_query_arg([
             'schoolbooth_download' => $normalized_rel_path,
@@ -320,7 +318,7 @@ class SCHOOLBOOTH_Upload_API {
         return $file_path;
     }
 
-    private function save_access_code_record($file_rel_path, $access_code, $session_id = '') {
+    private function save_access_code_record($file_rel_path, $access_code) {
         $upload_dir = wp_upload_dir();
         $settings = get_option('schoolbooth_settings', []);
         $base_path = isset($settings['upload_path']) ? $settings['upload_path'] : 'schoolbooth';
@@ -339,37 +337,18 @@ class SCHOOLBOOTH_Upload_API {
             }
         }
 
-        $record = [
+        $codes[$file_rel_path] = [
             'code' => $access_code,
             'downloads' => 0,
             'created' => current_time('mysql'),
             'filename' => basename($file_rel_path),
         ];
-        if ($session_id !== '') {
-            $record['session_id'] = $session_id;
-        }
-        $codes[$file_rel_path] = $record;
 
         if (file_put_contents($codes_file, wp_json_encode($codes, JSON_PRETTY_PRINT), LOCK_EX) === false) {
             return new WP_Error('schoolbooth_codes_write_failed', __('Failed to write access codes file', 'schoolbooth'), ['status' => 500]);
         }
 
         return true;
-    }
-
-    /**
-     * Sanitize a client-provided session_id. Accepts lowercase alphanumeric
-     * + underscore, max 64 chars. Returns '' if invalid.
-     */
-    private function sanitize_session_id($raw) {
-        $raw = strtolower((string) $raw);
-        if ($raw === '') {
-            return '';
-        }
-        if (!preg_match('/^[a-z0-9_]{1,64}$/', $raw)) {
-            return '';
-        }
-        return $raw;
     }
 }
 

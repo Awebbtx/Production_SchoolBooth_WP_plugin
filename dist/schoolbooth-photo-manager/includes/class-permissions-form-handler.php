@@ -370,7 +370,7 @@ class SCHOOLBOOTH_Permissions_Form_Handler {
         
         if (!empty($errors)) {
             $audit = SCHOOLBOOTH_Audit_Logger::init();
-            $form_failed_data = [
+            $audit->log_event('form_submission', [
                 'access_code'   => $access_code,
                 'success'       => false,
                 'reason'        => 'validation_failed',
@@ -379,12 +379,7 @@ class SCHOOLBOOTH_Permissions_Form_Handler {
                 'email_domain'  => $this->extract_email_domain($email),
                 'consent_name'  => trim($first_name . ' ' . $last_name),
                 'consent_email' => $email,
-            ];
-            $sid = SCHOOLBOOTH_Download_Handler::init()->lookup_session_id_for_code($access_code);
-            if ($sid !== '') {
-                $form_failed_data['session_id'] = $sid;
-            }
-            $audit->log_event('form_submission', $form_failed_data);
+            ]);
 
             wp_send_json_error([
                 'message' => __('Please correct the errors below', 'schoolbooth'),
@@ -397,7 +392,7 @@ class SCHOOLBOOTH_Permissions_Form_Handler {
         
         // Log form submission in audit trail
         $audit = SCHOOLBOOTH_Audit_Logger::init();
-        $form_ok_data = [
+        $audit_result = $audit->log_event('form_submission', [
             'access_code'    => $access_code,
             'success'        => true,
             'pii_hash'       => $pii_hash,
@@ -406,12 +401,7 @@ class SCHOOLBOOTH_Permissions_Form_Handler {
             'consent_email'  => $email,
             'consent'        => true,
             'ip_address'     => $this->get_client_ip(),
-        ];
-        $sid_ok = SCHOOLBOOTH_Download_Handler::init()->lookup_session_id_for_code($access_code);
-        if ($sid_ok !== '') {
-            $form_ok_data['session_id'] = $sid_ok;
-        }
-        $audit_result = $audit->log_event('form_submission', $form_ok_data);
+        ]);
         
         if (is_wp_error($audit_result)) {
             // Don't block the user just because the audit log couldn't be
