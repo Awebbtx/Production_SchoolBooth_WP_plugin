@@ -102,7 +102,9 @@ class SCHOOLBOOTH_Download_Handler {
             wp_die(__('Too many failed attempts. Please try again later.', 'schoolbooth'), 429);
         }
 
-        // Check if permissions form was completed
+        // Check if permissions form was completed. If not, send the user to
+        // the download portal (where the form is rendered) rather than dying
+        // with an opaque error -- this is the flow QR codes need.
         if (!$is_app_view && !SCHOOLBOOTH_Permissions_Form_Handler::has_completed_form($code)) {
             $audit = SCHOOLBOOTH_Audit_Logger::init();
             $audit->log_event('download_attempt', [
@@ -111,8 +113,9 @@ class SCHOOLBOOTH_Download_Handler {
                 'success'  => false,
                 'reason'   => 'form_not_completed',
             ]);
-            
-            wp_die(__('You must complete the permissions form before downloading.', 'schoolbooth'), 403);
+
+            $this->redirect_to_portal($file, $code);
+            return;
         }
 
         if (isset($_GET['force_download'])) {

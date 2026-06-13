@@ -69,11 +69,31 @@
                     }
                 },
                 error: function(xhr, status) {
+                    // jQuery routes any non-2xx HTTP response into this
+                    // callback, including the 400 validation errors and 403
+                    // nonce failures our PHP handler returns via
+                    // wp_send_json_error. Parse responseJSON so the user
+                    // sees the actual server message instead of a generic
+                    // "An error occurred while processing your form".
+                    let parsed = null;
+                    if (xhr && xhr.responseJSON) {
+                        parsed = xhr.responseJSON;
+                    } else if (xhr && xhr.responseText) {
+                        try { parsed = JSON.parse(xhr.responseText); } catch (e) { parsed = null; }
+                    }
+                    if (parsed && parsed.success === false) {
+                        handleErrorResponse(parsed);
+                        return;
+                    }
+
                     let message = cfg.generic_error || 'An error occurred while processing your form. Please try again.';
                     if (status === 'timeout') {
                         message = cfg.timeout_error || message;
                     } else if (xhr && xhr.status === 429) {
                         message = cfg.rate_limit_error || message;
+                    } else if (xhr && xhr.status === 403) {
+                        message = (parsed && parsed.data && parsed.data.message)
+                            || 'Security verification failed. Please refresh the page and try again.';
                     }
                     $statusDiv.removeClass('loading').addClass('error').text(message);
                 },

@@ -404,9 +404,14 @@ class SCHOOLBOOTH_Permissions_Form_Handler {
         ]);
         
         if (is_wp_error($audit_result)) {
-            wp_send_json_error([
-                'message' => __('Failed to process consent form. Please try again.', 'schoolbooth'),
-            ], 500);
+            // Don't block the user just because the audit log couldn't be
+            // written -- consent was given, surface a PHP error_log entry
+            // and continue. (Audit failures can be diagnosed separately.)
+            error_log(sprintf(
+                'Schoolbooth: failed to log form_submission for %s: %s',
+                $access_code,
+                $audit_result->get_error_message()
+            ));
         }
         
         // Record form submission for rate limiting
