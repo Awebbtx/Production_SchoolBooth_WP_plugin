@@ -149,29 +149,93 @@ class SCHOOLBOOTH_Audit_Logger {
             $this->register_cpt();
         }
 
-        // Create post for this audit event
+        // Try wp_insert_post() first (gives us the normal post lifecycle).
+        // On hosts where this fails (third-party filters, security plugins,
+        // capability checks against anonymous REST users, etc.) we fall
+        // through to a direct $wpdb->insert() that bypasses all filters.
         $post_id = wp_insert_post([
             'post_type'    => self::CPT,
             'post_status'  => 'publish',
             'post_title'   => sprintf('[%s] %s', $event_type, date('Y-m-d H:i:s')),
             'post_content' => wp_json_encode($event_record),
         ], true);
-        
-        if (is_wp_error($post_id)) {
-            $msg = '[schoolbooth audit] wp_insert_post failed for ' . $event_type . ': ' . $post_id->get_error_message();
-            error_log($msg);
-            $this->write_fallback_log(['_error' => $msg]);
-            return $post_id;
-        }
 
-        if (!$post_id) {
-            $msg = '[schoolbooth audit] wp_insert_post returned 0 for ' . $event_type . ' (CPT registered: ' . (post_type_exists(self::CPT) ? 'yes' : 'no') . ')';
-            error_log($msg);
-            $this->write_fallback_log(['_error' => $msg]);
-            return new WP_Error('insert_failed', 'wp_insert_post returned 0');
-        }
+        global $wpdb;
 
-        $this->write_fallback_log(['_inserted_post_id' => $post_id, 'event_type' => $event_type]);
+        if (is_wp_error($post_id) || !$post_id) {
+            $reason = is_wp_error($post_id)
+                ? $post_id->get_error_message()
+                : 'wp_insert_post returned 0';
+            $db_err = isset($wpdb->last_error) ? $wpdb->last_error : '';
+            error_log('[schoolbooth audit] wp_insert_post failed for ' . $event_type . ': ' . $reason . ($db_err ? ' | wpdb: ' . $db_err : ''));
+            $this->write_fallback_log([
+                '_wp_insert_post_error' => $reason,
+                '_wpdb_last_error'      => $db_err,
+                '_falling_back_to'      => 'direct wpdb insert',
+            ]);
+
+            // Direct insert bypasses ALL filters. We sanitize the inputs
+            // ourselves -- post_content is JSON we just generated.
+            $now_gmt   = gmdate('Y-m-d H:i:s');
+            $now_local = current_time('mysql');
+            $title     = sprintf('[%s] %s', $event_type, $now_gmt);
+            $content   = wp_json_encode($event_record);
+
+            $insert_ok = $wpdb->insert(
+                $wpdb->posts,
+                [
+                    'post_author'           => 0,
+                    'post_date'             => $now_local,
+                    'post_date_gmt'         => $now_gmt,
+                    'post_content'          => $content,
+                    'post_title'            => $title,
+                    'post_excerpt'          => '',
+                    'post_status'           => 'publish',
+                    'comment_status'        => 'closed',
+                    'ping_status'           => 'closed',
+                    'post_password'         => '',
+                    'post_name'             => 'audit-' . wp_generate_uuid4(),
+                    'to_ping'               => '',
+                    'pinged'                => '',
+                    'post_modified'         => $now_local,
+                    'post_modified_gmt'     => $now_gmt,
+                    'post_content_filtered' => '',
+                    'post_parent'           => 0,
+                    'guid'                  => '',
+                    'menu_order'            => 0,
+                    'post_type'             => self::CPT,
+                    'post_mime_type'        => '',
+                    'comment_count'         => 0,
+                ],
+                [
+                    '%d','%s','%s','%s','%s','%s','%s','%s','%s','%s',
+                    '%s','%s','%s','%s','%s','%d','%s','%d','%s','%d',
+                ]
+            );
+
+            if ($insert_ok === false) {
+                $db_err2 = isset($wpdb->last_error) ? $wpdb->last_error : '(no wpdb error)';
+                error_log('[schoolbooth audit] direct wpdb insert ALSO failed for ' . $event_type . ': ' . $db_err2);
+                $this->write_fallback_log([
+                    '_direct_wpdb_error' => $db_err2,
+                    'event_type'         => $event_type,
+                ]);
+                return new WP_Error('audit_insert_failed', 'Could not insert audit row: ' . $db_err2);
+            }
+
+            $post_id = (int) $wpdb->insert_id;
+            $this->write_fallback_log([
+                '_inserted_post_id'    => $post_id,
+                '_via'                 => 'direct_wpdb',
+                'event_type'           => $event_type,
+            ]);
+        } else {
+            $this->write_fallback_log([
+                '_inserted_post_id' => $post_id,
+                '_via'              => 'wp_insert_post',
+                'event_type'        => $event_type,
+            ]);
+        }
         
         // Store digest as post meta for integrity verification
         update_post_meta($post_id, self::INTEGRITY_KEY, $event_record['digest']);
